@@ -167,7 +167,7 @@ const prompt = ai.definePrompt({
   A user will provide a query. Use the web search tool to find relevant content.
   The user's query may be a direct title, a description of the plot, actors, or a general theme.
   Interpret the query, use the tool, and then return a list of matching content based on the tool's output. For each result, provide all the fields in the output schema.
-  For 'imageUrl', generate a unique url using https://placehold.co/600x400.png.
+  For 'imageUrl', generate a unique url using https://picsum.photos/seed/{a creative seed from the aiHint}/600/400.
   For 'aiHint', provide a short, two-word hint for image generation related to the movie title.
 
   If the query is "movie with magic wands", you might search for "movies about magic" and return results like "Harry Potter".
@@ -193,8 +193,9 @@ const agentFlow = ai.defineFlow(
 
     // Post-process to add the image URL if the model didn't, just in case.
     return output.map(item => {
-        if (!item.imageUrl || item.imageUrl.includes('picsum.photos')) {
-            item.imageUrl = `https://placehold.co/600x400.png`;
+        if (!item.imageUrl || item.imageUrl.includes('placehold.co')) {
+            const seed = item.aiHint.replace(/\s+/g, '-').toLowerCase() || 'movie-poster';
+            item.imageUrl = `https://picsum.photos/seed/${seed}/600/400`;
         }
         return item;
     });
