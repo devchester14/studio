@@ -135,6 +135,15 @@ const searchWebTool = ai.defineTool(
         genre: 'Action',
         year: 2022,
         aiHint: 'fighter jet',
+      },
+      {
+        id: '113',
+        title: 'Death Note',
+        platform: 'Netflix',
+        availability: 'Subscription',
+        genre: 'Anime Thriller',
+        year: 2006,
+        aiHint: 'shinigami apple',
       }
     ];
 
@@ -145,7 +154,8 @@ const searchWebTool = ai.defineTool(
         r.genre.toLowerCase().includes(queryLower) ||
         input.query.includes(String(r.year)) ||
         (queryLower.includes('magic') && r.title.includes('Harry Potter')) ||
-        (queryLower.includes('cruise') && r.title.includes('Top Gun'))
+        (queryLower.includes('cruise') && r.title.includes('Top Gun')) ||
+        (queryLower.includes('death') && r.title.includes('Death Note'))
     );
 
     return JSON.stringify(filteredResults.length > 0 ? filteredResults : fakeApiResults.slice(0,4));
