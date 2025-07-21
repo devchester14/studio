@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   Card,
   CardContent,
@@ -16,18 +17,6 @@ interface ContentCardProps {
 }
 
 export function ContentCard({ content }: ContentCardProps) {
-  const getBadgeVariant = (platform: string) => {
-    switch (platform.toLowerCase()) {
-      case "netflix":
-        return "destructive";
-      case "hulu":
-        return "secondary";
-      case "amazon prime":
-        return "default";
-      default:
-        return "outline";
-    }
-  };
 
   const renderActionButtons = () => {
     const availabilityLower = content.availability.toLowerCase();
@@ -71,23 +60,29 @@ export function ContentCard({ content }: ContentCardProps) {
 
   return (
     <Card className="flex flex-col overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 ease-in-out shadow-lg hover:shadow-primary/20 h-full">
-      <CardHeader>
-        <div className="relative aspect-video bg-gradient-to-t from-black via-slate-800 to-slate-900 flex items-center justify-center p-4 rounded-lg">
-            <CardTitle className="text-2xl font-bold text-white text-center font-headline">
-              {content.title}
-            </CardTitle>
+      <CardHeader className="p-0">
+        <div className="relative aspect-[2/3]">
+          <Image
+            src={`https://picsum.photos/seed/${content.id}/400/600`}
+            alt={`Poster for ${content.title}`}
+            fill
+            className="object-cover"
+            data-ai-hint={content.aiHint}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+          <CardTitle className="absolute bottom-4 left-4 text-2xl font-bold text-white font-headline">
+            {content.title}
+          </CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-0 flex-1 flex flex-col">
+      <CardContent className="p-4 flex-1 flex flex-col">
         <CardDescription className="line-clamp-3 text-sm mb-4">
             {content.plot}
         </CardDescription>
         <div className="flex flex-wrap gap-2 mt-auto">
-          <Badge variant={getBadgeVariant(content.platform)}>
-            {content.platform}
-          </Badge>
+          <Badge variant="secondary">{content.platform}</Badge>
           <Badge variant="outline">{content.availability}</Badge>
-          {content.genre && <Badge variant="secondary">{content.genre}</Badge>}
+          {content.genre && <Badge variant="default">{content.genre}</Badge>}
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">
