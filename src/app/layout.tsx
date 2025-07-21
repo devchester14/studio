@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster"
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "OTT Cross-Platform Content Discovery",
+  title: "StreamWeaver",
   description: "Unified search and personalized recommendations across streaming platforms.",
 };
 
