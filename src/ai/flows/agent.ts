@@ -29,6 +29,7 @@ const searchWebTool = ai.defineTool(
     // For this example, we'll return a more extensive simulated result set.
     const fakeApiResults = [
       {
+        id: '101',
         title: 'The Matrix',
         platform: 'HBO Max',
         availability: 'Subscription',
@@ -37,6 +38,7 @@ const searchWebTool = ai.defineTool(
         aiHint: 'digital rain code',
       },
       {
+        id: '102',
         title: 'Blade Runner 2049',
         platform: 'For rent',
         availability: 'Rental',
@@ -45,6 +47,7 @@ const searchWebTool = ai.defineTool(
         aiHint: 'futuristic city',
       },
       {
+        id: '103',
         title: 'Inception',
         platform: 'Netflix',
         availability: 'Subscription',
@@ -53,6 +56,7 @@ const searchWebTool = ai.defineTool(
         aiHint: 'spinning top',
       },
       {
+        id: '104',
         title: 'Parasite',
         platform: 'Hulu',
         availability: 'Subscription',
@@ -61,6 +65,7 @@ const searchWebTool = ai.defineTool(
         aiHint: 'family portrait',
       },
       {
+        id: '105',
         title: 'The Lord of the Rings: The Fellowship of the Ring',
         platform: 'Amazon Prime',
         availability: 'Purchase',
@@ -69,6 +74,7 @@ const searchWebTool = ai.defineTool(
         aiHint: 'fantasy landscape',
       },
       {
+        id: '106',
         title: 'Pulp Fiction',
         platform: 'For rent',
         availability: 'Rental',
@@ -77,6 +83,7 @@ const searchWebTool = ai.defineTool(
         aiHint: 'diner dance',
       },
       {
+        id: '107',
         title: 'Forrest Gump',
         platform: 'Netflix',
         availability: 'Subscription',
@@ -85,6 +92,7 @@ const searchWebTool = ai.defineTool(
         aiHint: 'park bench',
       },
       {
+        id: '108',
         title: 'The Godfather',
         platform: 'Paramount+',
         availability: 'Subscription',
@@ -93,6 +101,7 @@ const searchWebTool = ai.defineTool(
         aiHint: 'mafia boss',
       },
       {
+        id: '109',
         title: 'Harry Potter and the Sorcerer\'s Stone',
         platform: 'HBO Max',
         availability: 'Subscription',
@@ -101,6 +110,7 @@ const searchWebTool = ai.defineTool(
         aiHint: 'magic castle',
       },
        {
+        id: '110',
         title: 'The Office (US)',
         platform: 'Peacock',
         availability: 'Subscription',
@@ -109,6 +119,7 @@ const searchWebTool = ai.defineTool(
         aiHint: 'office supplies',
       },
        {
+        id: '111',
         title: 'Breaking Bad',
         platform: 'Netflix',
         availability: 'Subscription',
@@ -117,6 +128,7 @@ const searchWebTool = ai.defineTool(
         aiHint: 'desert RV',
       },
        {
+        id: '112',
         title: 'Top Gun: Maverick',
         platform: 'For rent',
         availability: 'Rental',
@@ -155,8 +167,7 @@ const prompt = ai.definePrompt({
   A user will provide a query. Use the web search tool to find relevant content.
   The user's query may be a direct title, a description of the plot, actors, or a general theme.
   Interpret the query, use the tool, and then return a list of matching content based on the tool's output. For each result, provide all the fields in the output schema.
-  For the 'id' field, generate a unique string.
-  For 'imageUrl', use a placeholder from https://placehold.co/600x400.png.
+  For 'imageUrl', generate a unique url using https://picsum.photos/seed/{id}/600/400 where {id} is the movie's unique ID.
   For 'aiHint', provide a short, two-word hint for image generation related to the movie title.
 
   If the query is "movie with magic wands", you might search for "movies about magic" and return results like "Harry Potter".
@@ -176,6 +187,16 @@ const agentFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output || [];
+    if (!output) {
+      return [];
+    }
+
+    // Post-process to add the image URL if the model didn't, just in case.
+    return output.map(item => {
+        if (!item.imageUrl || item.imageUrl.includes('placehold.co')) {
+            item.imageUrl = `https://picsum.photos/seed/${item.id}/600/400`;
+        }
+        return item;
+    });
   }
 );
