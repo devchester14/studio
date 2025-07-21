@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from "@/component
 import { Search, Loader2 } from "lucide-react";
 import { ContentCard } from "./content-card";
 import type { Content } from "@/types";
+import { VoiceSearch } from "./voice-search";
 
 const searchSchema = z.object({
   query: z.string(),
@@ -20,11 +21,12 @@ const searchSchema = z.object({
 type SearchFormValues = z.infer<typeof searchSchema>;
 
 interface SearchSectionProps {
-  query: string;
-  onQueryChange: (query: string) => void;
+  onResults: (results: Content[]) => void;
+  onLoading: (isLoading: boolean) => void;
+  onSearched: (hasSearched: boolean) => void;
 }
 
-export function SearchSection({ query, onQueryChange }: SearchSectionProps) {
+export function SearchSection({ onResults, onLoading, onSearched }: SearchSectionProps) {
   const [searchResults, setSearchResults] = useState<Content[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -38,28 +40,29 @@ export function SearchSection({ query, onQueryChange }: SearchSectionProps) {
     },
   });
 
-  // Sync external query changes to the form
-  useEffect(() => {
-    form.setValue("query", query);
-  }, [query, form]);
-
   const formQuery = form.watch("query");
-
-  // Sync internal form changes to the parent
+  
   useEffect(() => {
-      onQueryChange(formQuery);
-  }, [formQuery, onQueryChange]);
-
+    onResults(searchResults);
+  }, [searchResults, onResults]);
 
   useEffect(() => {
-    const debounceSearch = setTimeout(async () => {
-      if (formQuery.length >= 3) {
+    onLoading(isLoading);
+  }, [isLoading, onLoading]);
+
+  useEffect(() => {
+    onSearched(hasSearched);
+  }, [hasSearched, onSearched]);
+
+
+  const performSearch = async (query: string) => {
+      if (query.length >= 3) {
         setIsLoading(true);
         setHasSearched(true);
-        setCurrentQuery(formQuery);
+        setCurrentQuery(query);
         setSearchResults([]);
 
-        const result = await searchContent({ query: formQuery });
+        const result = await searchContent({ query });
         setIsLoading(false);
 
         if (result.success && result.data) {
@@ -78,6 +81,11 @@ export function SearchSection({ query, onQueryChange }: SearchSectionProps) {
         setHasSearched(false);
         if (isLoading) setIsLoading(false);
       }
+  }
+
+  useEffect(() => {
+    const debounceSearch = setTimeout(() => {
+      performSearch(formQuery)
     }, 500); // 500ms debounce delay
 
     return () => clearTimeout(debounceSearch);
@@ -95,34 +103,40 @@ export function SearchSection({ query, onQueryChange }: SearchSectionProps) {
         </p>
       </div>
 
-      <Form {...form}>
-        <form
-          onSubmit={(e) => e.preventDefault()} // Prevent form submission on enter
-          className="flex w-full max-w-2xl mx-auto items-start space-x-2"
-        >
-          <FormField
-            control={form.control}
-            name="query"
-            render={({ field }) => (
-              <FormItem className="relative w-full">
-                <FormControl>
-                  <div className="relative w-full">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                      {...field}
-                      type="search"
-                      placeholder="Search for 'sci-fi movies with spaceships'..."
-                      className="pl-10 text-base h-12"
-                      aria-label="Search content"
-                    />
-                  </div>
-                </FormControl>
-                 <FormMessage className="absolute" />
-              </FormItem>
-            )}
-          />
-        </form>
-      </Form>
+       <div className="flex w-full max-w-2xl mx-auto items-start space-x-2">
+         <Form {...form}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                performSearch(form.getValues("query"))
+              }}
+              className="flex-grow"
+            >
+              <FormField
+                control={form.control}
+                name="query"
+                render={({ field }) => (
+                  <FormItem className="relative w-full">
+                    <FormControl>
+                      <div className="relative w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input
+                          {...field}
+                          type="search"
+                          placeholder="Search for 'sci-fi movies with spaceships'..."
+                          className="pl-10 text-base h-12"
+                          aria-label="Search content"
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="absolute" />
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
+          <VoiceSearch onTranscriptChanged={(transcript) => form.setValue("query", transcript)} />
+       </div>
 
 
       {isLoading && (
