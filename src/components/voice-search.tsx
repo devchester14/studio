@@ -51,7 +51,7 @@ export function VoiceSearch({ onTranscriptChanged }: VoiceSearchProps) {
         
         // In a real app, you would send this audioBlob to a speech-to-text API.
         // For this POC, we'll just use a placeholder transcript to trigger the agent.
-        const placeholderTranscript = "Show me movies like The Matrix.";
+        const placeholderTranscript = "Show me movies about a friendly robot.";
 
         // Update the main search query
         onTranscriptChanged(placeholderTranscript);
