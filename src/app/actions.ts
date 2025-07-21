@@ -7,6 +7,9 @@ import {
 import {
   agent,
 } from "@/ai/flows/agent";
+import {
+  textToSpeech,
+} from "@/ai/flows/text-to-speech";
 import type { SemanticSearchInput } from "@/types/ai";
 
 
@@ -36,4 +39,17 @@ export async function searchContent(input: SemanticSearchInput) {
       error: "We couldn't perform the search at this time. Please try again later.",
     };
   }
+}
+
+export async function getSpeech(text: string) {
+    try {
+        const result = await textToSpeech(text);
+        return { success: true, data: result.media };
+    } catch (error) {
+        console.error("Error generating speech:", error);
+        return {
+        success: false,
+        error: "We couldn't generate speech at this time. Please try again later.",
+        };
+    }
 }
