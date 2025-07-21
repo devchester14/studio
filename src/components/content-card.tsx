@@ -1,4 +1,3 @@
-import Image from "next/image";
 import {
   Card,
   CardContent,
@@ -69,19 +68,10 @@ export function ContentCard({ content }: ContentCardProps) {
 
   return (
     <Card className="flex flex-col overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 ease-in-out shadow-lg hover:shadow-primary/20 h-full">
-      <div className="relative aspect-video">
-        <Image
-          src={content.imageUrl}
-          alt={content.title}
-          fill
-          className="object-cover"
-          data-ai-hint={content.aiHint}
-        />
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center p-4">
-            <h2 className="text-2xl font-bold text-white text-center font-headline">
-                {content.title}
-            </h2>
-        </div>
+      <div className="relative aspect-video bg-gradient-to-t from-black via-slate-800 to-slate-900 flex items-center justify-center p-4">
+        <h2 className="text-2xl font-bold text-white text-center font-headline">
+          {content.title}
+        </h2>
       </div>
       <CardContent className="p-4 flex-1 flex flex-col">
         <div className="flex flex-wrap gap-2 mt-auto">
