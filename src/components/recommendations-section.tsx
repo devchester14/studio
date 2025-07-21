@@ -43,7 +43,11 @@ const recommendationSchema = z.object({
 
 type RecommendationFormValues = z.infer<typeof recommendationSchema>;
 
-export function RecommendationsSection() {
+interface RecommendationsSectionProps {
+    initialQuery?: string;
+}
+
+export function RecommendationsSection({ initialQuery }: RecommendationsSectionProps) {
   const [recommendations, setRecommendations] = useLocalStorage<Content[]>(
     "recommendations",
     []
@@ -59,16 +63,20 @@ export function RecommendationsSection() {
   const form = useForm<RecommendationFormValues>({
     resolver: zodResolver(recommendationSchema),
     defaultValues: storedPrefs || {
-      userPreferences: "",
+      userPreferences: initialQuery || "",
       viewingHistory: "",
     },
   });
 
    useEffect(() => {
-    if (storedPrefs) {
-      form.reset(storedPrefs);
+    // If there's an initial query from the search page, update the form.
+    // This connects the AI's "memory" of your search to its recommendations.
+    if (initialQuery && (!storedPrefs?.userPreferences || storedPrefs.userPreferences !== initialQuery)) {
+      form.setValue("userPreferences", `Based on my search for "${initialQuery}", I like...`);
+    } else if (storedPrefs) {
+        form.reset(storedPrefs);
     }
-  }, [storedPrefs, form]);
+   }, [initialQuery, storedPrefs, form]);
 
   const onSubmit: SubmitHandler<RecommendationFormValues> = async (data) => {
     setIsLoading(true);
@@ -111,7 +119,7 @@ export function RecommendationsSection() {
           AI-Powered Recommendations
         </h2>
         <p className="mt-2 text-lg text-muted-foreground">
-          Let our AI find your next favorite show or movie.
+          Let our AI find your next favorite show or movie based on your search.
         </p>
       </div>
       <div className="w-full max-w-2xl mx-auto">
@@ -131,7 +139,7 @@ export function RecommendationsSection() {
                     />
                   </FormControl>
                   <FormDescription>
-                    Describe your favorite genres, movies, shows, or actors.
+                    Describe your favorite genres, movies, shows, or actors. This is pre-filled based on your last search.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
