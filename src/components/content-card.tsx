@@ -3,8 +3,6 @@ import {
   Card,
   CardContent,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,7 +19,7 @@ export function ContentCard({ content }: ContentCardProps) {
       case "netflix":
         return "destructive";
       case "hulu":
-        return "secondary"; // Let's assume Hulu has a 'secondary' look
+        return "secondary";
       case "amazon prime":
         return "default";
       default:
@@ -58,7 +56,6 @@ export function ContentCard({ content }: ContentCardProps) {
       );
     }
     
-    // If no specific action, maybe show a generic "More Info"
     if(actions.length === 0) {
         actions.push(
              <Button key="info" variant="ghost" className="flex-1">
@@ -72,21 +69,21 @@ export function ContentCard({ content }: ContentCardProps) {
 
   return (
     <Card className="flex flex-col overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 ease-in-out shadow-lg hover:shadow-primary/20 h-full">
-      <CardHeader className="p-0">
-        <div className="relative aspect-video">
-          <Image
-            src={content.imageUrl}
-            alt={content.title}
-            fill
-            className="object-cover"
-            data-ai-hint={content.aiHint}
-          />
+      <div className="relative aspect-video">
+        <Image
+          src={content.imageUrl}
+          alt={content.title}
+          fill
+          className="object-cover"
+          data-ai-hint={content.aiHint}
+        />
+        <div className="absolute inset-0 bg-black/40 flex items-center justify-center p-4">
+            <h2 className="text-2xl font-bold text-white text-center font-headline">
+                {content.title}
+            </h2>
         </div>
-      </CardHeader>
+      </div>
       <CardContent className="p-4 flex-1 flex flex-col">
-        <CardTitle className="text-lg font-headline mb-2 leading-tight">
-          {content.title}
-        </CardTitle>
         <div className="flex flex-wrap gap-2 mt-auto">
           <Badge variant={getBadgeVariant(content.platform)}>
             {content.platform}
