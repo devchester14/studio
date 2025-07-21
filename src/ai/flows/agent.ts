@@ -1,8 +1,8 @@
 'use server';
 /**
- * @fileOverview An AI-powered semantic search agent for finding content.
+ * @fileOverview An AI-powered agent for finding content.
  *
- * - semanticSearch - A function that handles the semantic-search process.
+ * - agent - A function that handles the agentic search process.
  */
 
 import {ai} from '@/ai/genkit';
@@ -140,14 +140,14 @@ const searchWebTool = ai.defineTool(
   }
 );
 
-export async function semanticSearch(
+export async function agent(
   input: SemanticSearchInput
 ): Promise<SemanticSearchOutput> {
-  return semanticSearchFlow(input);
+  return agentFlow(input);
 }
 
 const prompt = ai.definePrompt({
-  name: 'semanticSearchPrompt',
+  name: 'agentPrompt',
   input: {schema: SemanticSearchInputSchema},
   output: {schema: SemanticSearchOutputSchema},
   tools: [searchWebTool],
@@ -168,9 +168,9 @@ const prompt = ai.definePrompt({
   `,
 });
 
-const semanticSearchFlow = ai.defineFlow(
+const agentFlow = ai.defineFlow(
   {
-    name: 'semanticSearchFlow',
+    name: 'agentFlow',
     inputSchema: SemanticSearchInputSchema,
     outputSchema: SemanticSearchOutputSchema,
   },

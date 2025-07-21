@@ -5,8 +5,8 @@ import {
   type PersonalizedRecommendationsInput,
 } from "@/ai/flows/generate-personalized-recommendations";
 import {
-  semanticSearch,
-} from "@/ai/flows/semantic-search";
+  agent,
+} from "@/ai/flows/agent";
 import type { SemanticSearchInput } from "@/types/ai";
 
 
@@ -27,7 +27,7 @@ export async function getRecommendations(
 
 export async function searchContent(input: SemanticSearchInput) {
   try {
-    const results = await semanticSearch(input);
+    const results = await agent(input);
     return { success: true, data: results };
   } catch (error) {
     console.error("Error performing semantic search:", error);
