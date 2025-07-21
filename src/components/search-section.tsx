@@ -1,20 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { searchContent } from "@/app/actions";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Search, Loader2 } from "lucide-react";
 import { ContentCard } from "./content-card";
 import type { Content } from "@/types";
 
 const searchSchema = z.object({
-  query: z.string().min(3, "Please enter a longer search query."),
+  query: z.string(),
 });
 
 type SearchFormValues = z.infer<typeof searchSchema>;
@@ -33,29 +32,41 @@ export function SearchSection() {
     },
   });
 
-  const onSubmit: SubmitHandler<SearchFormValues> = async (data) => {
-    setIsLoading(true);
-    setHasSearched(true);
-    setCurrentQuery(data.query);
-    setSearchResults([]);
+  const query = form.watch("query");
 
-    const result = await searchContent({ query: data.query });
+  useEffect(() => {
+    const debounceSearch = setTimeout(async () => {
+      if (query.length >= 3) {
+        setIsLoading(true);
+        setHasSearched(true);
+        setCurrentQuery(query);
+        setSearchResults([]);
 
-    setIsLoading(false);
+        const result = await searchContent({ query });
 
-    if (result.success && result.data) {
-      // The AI already returns data in the `Content` format
-      setSearchResults(result.data as Content[]);
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Search Error",
-        description:
-          result.error ||
-          "An unexpected error occurred. Please try again later.",
-      });
-    }
-  };
+        setIsLoading(false);
+
+        if (result.success && result.data) {
+          setSearchResults(result.data as Content[]);
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Search Error",
+            description:
+              result.error ||
+              "An unexpected error occurred. Please try again later.",
+          });
+        }
+      } else {
+        // Clear results if query is too short
+        setSearchResults([]);
+        setHasSearched(false);
+        if (isLoading) setIsLoading(false);
+      }
+    }, 500); // 500ms debounce delay
+
+    return () => clearTimeout(debounceSearch);
+  }, [query, toast, isLoading]);
 
   return (
     <section id="search" className="space-y-8">
@@ -70,7 +81,7 @@ export function SearchSection() {
 
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(onSubmit)}
+          onSubmit={(e) => e.preventDefault()} // Prevent form submission on enter
           className="flex w-full max-w-2xl mx-auto items-start space-x-2"
         >
           <FormField
@@ -94,10 +105,6 @@ export function SearchSection() {
               </FormItem>
             )}
           />
-
-          <Button type="submit" size="lg" className="h-12" disabled={isLoading}>
-            {isLoading ? <Loader2 className="animate-spin" /> : "Search"}
-          </Button>
         </form>
       </Form>
 
@@ -117,11 +124,13 @@ export function SearchSection() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-10">
-              <p className="text-muted-foreground">
-                No results found for &quot;{currentQuery}&quot;. Try another search.
-              </p>
-            </div>
+             query.length >= 3 && (
+                <div className="text-center py-10">
+                  <p className="text-muted-foreground">
+                    No results found for &quot;{currentQuery}&quot;. Try another search.
+                  </p>
+                </div>
+             )
           )}
         </div>
       )}
