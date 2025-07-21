@@ -21,14 +21,57 @@ export function ContentCard({ content }: ContentCardProps) {
       case "netflix":
         return "destructive";
       case "hulu":
-        return "secondary";
-      default:
+        return "secondary"; // Let's assume Hulu has a 'secondary' look
+      case "amazon prime":
         return "default";
+      default:
+        return "outline";
     }
   };
 
+  const renderActionButtons = () => {
+    const availabilityLower = content.availability.toLowerCase();
+    const actions = [];
+
+    if (availabilityLower === "subscription") {
+      actions.push(
+        <Button key="watch" className="flex-1">
+          <PlayCircle />
+          Watch Now
+        </Button>
+      );
+    }
+    if (availabilityLower.includes("rent")) {
+      actions.push(
+        <Button key="rent" variant="secondary" className="flex-1">
+          <ShoppingCart />
+          Rent
+        </Button>
+      );
+    }
+    if (availabilityLower.includes("purchase") || availabilityLower.includes("buy")) {
+       actions.push(
+        <Button key="buy" variant="outline" className="flex-1">
+          <Tv />
+          Buy
+        </Button>
+      );
+    }
+    
+    // If no specific action, maybe show a generic "More Info"
+    if(actions.length === 0) {
+        actions.push(
+             <Button key="info" variant="ghost" className="flex-1">
+                More Info
+             </Button>
+        )
+    }
+
+    return actions;
+  };
+
   return (
-    <Card className="flex flex-col overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 ease-in-out shadow-lg hover:shadow-primary/20">
+    <Card className="flex flex-col overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 ease-in-out shadow-lg hover:shadow-primary/20 h-full">
       <CardHeader className="p-0">
         <div className="relative aspect-video">
           <Image
@@ -40,11 +83,11 @@ export function ContentCard({ content }: ContentCardProps) {
           />
         </div>
       </CardHeader>
-      <CardContent className="p-4 flex-1">
-        <CardTitle className="text-lg font-headline mb-2">
+      <CardContent className="p-4 flex-1 flex flex-col">
+        <CardTitle className="text-lg font-headline mb-2 leading-tight">
           {content.title}
         </CardTitle>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mt-auto">
           <Badge variant={getBadgeVariant(content.platform)}>
             {content.platform}
           </Badge>
@@ -53,24 +96,7 @@ export function ContentCard({ content }: ContentCardProps) {
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <div className="w-full flex items-center gap-2">
-          {content.availability.toLowerCase() === "subscription" && (
-            <Button className="w-full">
-              <PlayCircle />
-              Watch Now
-            </Button>
-          )}
-          {content.availability.toLowerCase().includes("rent") && (
-            <Button variant="secondary" className="w-full">
-              <ShoppingCart />
-              Rent
-            </Button>
-          )}
-          {content.availability.toLowerCase().includes("purchase") && (
-            <Button variant="outline" className="w-full">
-              <Tv />
-              Buy
-            </Button>
-          )}
+          {renderActionButtons()}
         </div>
       </CardFooter>
     </Card>
