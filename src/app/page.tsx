@@ -2,24 +2,58 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Header } from "@/components/header";
-import { SearchSection } from "@/components/search-section";
-import { Content } from "@/types";
+import { Search, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { VoiceSearch } from "@/components/voice-search";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
 export default function Home() {
-  const [results, setResults] = useState<Content[]>([]);
+  const [query, setQuery] = useLocalStorage("searchQuery", "");
   const [isLoading, setIsLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
+  const router = useRouter();
+
+  const handleSearch = (newQuery: string) => {
+    setQuery(newQuery);
+    if (newQuery.trim().length >= 3) {
+      setIsLoading(true);
+      router.push(`/results?q=${encodeURIComponent(newQuery)}`);
+    }
+  };
 
   return (
     <>
       <Header />
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        <SearchSection
-          onResults={setResults}
-          onLoading={setIsLoading}
-          onSearched={setHasSearched}
-        />
+      <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center -mt-16">
+        <div className="w-full text-center mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-headline">
+              Find Anything, Instantly
+            </h1>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Your universal guide to streaming content.
+            </p>
+        </div>
+        <div className="flex w-full items-center space-x-2">
+            <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                    type="search"
+                    placeholder="Search for 'sci-fi movies with spaceships'..."
+                    className="pl-10 text-base h-12"
+                    aria-label="Search content"
+                    value={query}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleSearch(query);
+                      }
+                    }}
+                />
+                 {isLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+            </div>
+            <VoiceSearch onTranscriptChanged={handleSearch} />
+        </div>
       </main>
     </>
   );

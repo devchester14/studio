@@ -1,6 +1,7 @@
+// src/components/recommendations-section.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,8 +27,8 @@ import {
 } from "@/components/ui/carousel";
 import { ContentCard } from "@/components/content-card";
 import { Loader2, Sparkles } from "lucide-react";
-import type { PersonalizedRecommendationsOutput } from "@/ai/flows/generate-personalized-recommendations";
 import type { Content } from "@/types";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
 const recommendationSchema = z.object({
   userPreferences: z
@@ -43,21 +44,37 @@ const recommendationSchema = z.object({
 type RecommendationFormValues = z.infer<typeof recommendationSchema>;
 
 export function RecommendationsSection() {
-  const [recommendations, setRecommendations] = useState<Content[]>([]);
+  const [recommendations, setRecommendations] = useLocalStorage<Content[]>(
+    "recommendations",
+    []
+  );
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  const [storedPrefs, setStoredPrefs] = useLocalStorage<RecommendationFormValues | null>(
+    "userPreferences",
+    null
+  );
+
   const form = useForm<RecommendationFormValues>({
     resolver: zodResolver(recommendationSchema),
-    defaultValues: {
+    defaultValues: storedPrefs || {
       userPreferences: "",
       viewingHistory: "",
     },
   });
 
+   useEffect(() => {
+    if (storedPrefs) {
+      form.reset(storedPrefs);
+    }
+  }, [storedPrefs, form]);
+
   const onSubmit: SubmitHandler<RecommendationFormValues> = async (data) => {
     setIsLoading(true);
     setRecommendations([]);
+    setStoredPrefs(data);
+
     const result = await getRecommendations({
       userPreferences: data.userPreferences,
       viewingHistory: data.viewingHistory || "No history provided.",
@@ -154,12 +171,12 @@ export function RecommendationsSection() {
 
       {isLoading && (
         <div className="flex justify-center items-center py-10">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
       )}
 
       {recommendations.length > 0 && (
-         <Carousel
+        <Carousel
           opts={{
             align: "start",
             loop: true,
