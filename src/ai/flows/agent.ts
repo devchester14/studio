@@ -164,7 +164,7 @@ const prompt = ai.definePrompt({
 
   User Query: {{{query}}}
   
-  Return up to 4 results.
+  Return up to 10 results.
   `,
 });
 

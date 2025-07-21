@@ -1,3 +1,4 @@
+// src/components/search-section.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -18,7 +19,12 @@ const searchSchema = z.object({
 
 type SearchFormValues = z.infer<typeof searchSchema>;
 
-export function SearchSection() {
+interface SearchSectionProps {
+  query: string;
+  onQueryChange: (query: string) => void;
+}
+
+export function SearchSection({ query, onQueryChange }: SearchSectionProps) {
   const [searchResults, setSearchResults] = useState<Content[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -32,18 +38,28 @@ export function SearchSection() {
     },
   });
 
-  const query = form.watch("query");
+  // Sync external query changes to the form
+  useEffect(() => {
+    form.setValue("query", query);
+  }, [query, form]);
+
+  const formQuery = form.watch("query");
+
+  // Sync internal form changes to the parent
+  useEffect(() => {
+      onQueryChange(formQuery);
+  }, [formQuery, onQueryChange]);
+
 
   useEffect(() => {
     const debounceSearch = setTimeout(async () => {
-      if (query.length >= 3) {
+      if (formQuery.length >= 3) {
         setIsLoading(true);
         setHasSearched(true);
-        setCurrentQuery(query);
+        setCurrentQuery(formQuery);
         setSearchResults([]);
 
-        const result = await searchContent({ query });
-
+        const result = await searchContent({ query: formQuery });
         setIsLoading(false);
 
         if (result.success && result.data) {
@@ -58,7 +74,6 @@ export function SearchSection() {
           });
         }
       } else {
-        // Clear results if query is too short
         setSearchResults([]);
         setHasSearched(false);
         if (isLoading) setIsLoading(false);
@@ -66,7 +81,8 @@ export function SearchSection() {
     }, 500); // 500ms debounce delay
 
     return () => clearTimeout(debounceSearch);
-  }, [query, toast]);
+  }, [formQuery, toast]);
+
 
   return (
     <section id="search" className="space-y-8">
@@ -124,7 +140,7 @@ export function SearchSection() {
               ))}
             </div>
           ) : (
-             query.length >= 3 && (
+             formQuery.length >= 3 && (
                 <div className="text-center py-10">
                   <p className="text-muted-foreground">
                     No results found for &quot;{currentQuery}&quot;. Try another search.

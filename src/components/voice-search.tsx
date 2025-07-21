@@ -1,20 +1,21 @@
+// src/components/voice-search.tsx
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Mic, MicOff, Loader2, Bot, Search } from "lucide-react";
+import { Mic, MicOff, Loader2, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getSpeech, searchContent } from "@/app/actions";
+import { getSpeech } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
-import { ContentCard } from "./content-card";
-import type { Content } from "@/types";
 
-export function VoiceSearch() {
+interface VoiceSearchProps {
+  onTranscriptChanged: (transcript: string) => void;
+}
+
+export function VoiceSearch({ onTranscriptChanged }: VoiceSearchProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [transcript, setTranscript] = useState("");
-  const [searchResults, setSearchResults] = useState<Content[]>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -28,9 +29,7 @@ export function VoiceSearch() {
   }, [audioUrl]);
 
   const resetState = () => {
-    setTranscript("");
     setAudioUrl(null);
-    setSearchResults([]);
     setIsProcessing(false);
     setIsRecording(false);
   };
@@ -53,24 +52,13 @@ export function VoiceSearch() {
         // In a real app, you would send this audioBlob to a speech-to-text API.
         // For this POC, we'll just use a placeholder transcript to trigger the agent.
         const placeholderTranscript = "Show me movies like The Matrix.";
-        setTranscript(placeholderTranscript);
 
-        // 1. Get text response from agent
-        const searchResult = await searchContent({ query: placeholderTranscript });
+        // Update the main search query
+        onTranscriptChanged(placeholderTranscript);
 
-        if (searchResult.success && searchResult.data) {
-          setSearchResults(searchResult.data as Content[]);
-        } else {
-           toast({
-            variant: "destructive",
-            title: "Search Error",
-            description: searchResult.error || "Could not fetch search results.",
-          });
-        }
-
-        // 2. Get audio response
+        // Get audio response for confirmation
         const speechResult = await getSpeech(
-          `I found a few results for: ${placeholderTranscript}`
+          `Searching for: ${placeholderTranscript}`
         );
         
         if (speechResult.success && speechResult.data) {
@@ -113,7 +101,7 @@ export function VoiceSearch() {
   };
 
   return (
-    <section id="voice-search" className="space-y-8">
+    <section id="voice-search" className="space-y-6">
       <div className="text-center">
         <h2 className="text-3xl font-bold tracking-tight font-headline">
           Or, Just Ask
@@ -145,33 +133,18 @@ export function VoiceSearch() {
         )}
       </div>
 
-      {transcript && (
-         <Card className="max-w-4xl mx-auto">
-          <CardContent className="p-4 space-y-4">
-             <div className="flex items-center justify-center gap-2 font-medium">
-                <Search className="text-primary"/>
-                <span>Your query: &quot;{transcript}&quot;</span>
-            </div>
-
-            {audioUrl && (
-              <div className="flex flex-col items-center justify-center gap-4 border-t pt-4">
-                 <div className="flex items-center gap-2 font-medium">
-                    <Bot className="text-primary"/>
-                    <span>Agent Response:</span>
-                </div>
-                <audio ref={audioRef} src={audioUrl} controls className="w-full max-w-md" />
+      {audioUrl && (
+        <Card className="max-w-md mx-auto">
+          <CardContent className="p-4">
+            <div className="flex flex-col items-center justify-center gap-4">
+               <div className="flex items-center gap-2 font-medium">
+                  <Bot className="text-primary"/>
+                  <span>Agent Confirmation:</span>
               </div>
-            )}
-           </CardContent>
-         </Card>
-      )}
-
-      {searchResults.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-          {searchResults.map((content) => (
-            <ContentCard key={content.id} content={content} />
-          ))}
-        </div>
+              <audio ref={audioRef} src={audioUrl} controls className="w-full" />
+            </div>
+          </CardContent>
+        </Card>
       )}
     </section>
   );
