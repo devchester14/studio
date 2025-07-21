@@ -4,8 +4,6 @@
 import { useState }from "react";
 import { Header } from "@/components/header";
 import { SearchSection } from "@/components/search-section";
-import { RecommendationsSection } from "@/components/recommendations-section";
-import { Separator } from "@/components/ui/separator";
 import type { Content } from "@/types";
 
 export default function ResultsPage() {
@@ -22,12 +20,6 @@ export default function ResultsPage() {
           onLoading={setIsLoading}
           onSearched={setHasSearched}
         />
-        {hasSearched && !isLoading && (
-            <>
-                <Separator className="my-12" />
-                <RecommendationsSection />
-            </>
-        )}
       </main>
     </>
   );
