@@ -66,7 +66,7 @@ export function SearchSection() {
     }, 500); // 500ms debounce delay
 
     return () => clearTimeout(debounceSearch);
-  }, [query, toast, isLoading]);
+  }, [query, toast]);
 
   return (
     <section id="search" className="space-y-8">
