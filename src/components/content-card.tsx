@@ -63,7 +63,7 @@ export function ContentCard({ content }: ContentCardProps) {
       <CardHeader className="p-0">
         <div className="relative aspect-[2/3]">
           <Image
-            src={`https://picsum.photos/seed/${content.id}/400/600`}
+            src={content.imageUrl}
             alt={`Poster for ${content.title}`}
             fill
             className="object-cover"
