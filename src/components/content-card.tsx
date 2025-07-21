@@ -1,7 +1,10 @@
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -68,17 +71,23 @@ export function ContentCard({ content }: ContentCardProps) {
 
   return (
     <Card className="flex flex-col overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 ease-in-out shadow-lg hover:shadow-primary/20 h-full">
-      <div className="relative aspect-video bg-gradient-to-t from-black via-slate-800 to-slate-900 flex items-center justify-center p-4">
-        <h2 className="text-2xl font-bold text-white text-center font-headline">
-          {content.title}
-        </h2>
-      </div>
-      <CardContent className="p-4 flex-1 flex flex-col">
+      <CardHeader>
+        <div className="relative aspect-video bg-gradient-to-t from-black via-slate-800 to-slate-900 flex items-center justify-center p-4 rounded-lg">
+            <CardTitle className="text-2xl font-bold text-white text-center font-headline">
+              {content.title}
+            </CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 pt-0 flex-1 flex flex-col">
+        <CardDescription className="line-clamp-3 text-sm mb-4">
+            {content.plot}
+        </CardDescription>
         <div className="flex flex-wrap gap-2 mt-auto">
           <Badge variant={getBadgeVariant(content.platform)}>
             {content.platform}
           </Badge>
           <Badge variant="outline">{content.availability}</Badge>
+          {content.genre && <Badge variant="secondary">{content.genre}</Badge>}
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">

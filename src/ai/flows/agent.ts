@@ -35,6 +35,8 @@ const searchWebTool = ai.defineTool(
         availability: 'Subscription',
         genre: 'Sci-Fi Action',
         year: 1999,
+        plot: 'A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.',
+        actors: 'Keanu Reeves, Laurence Fishburne, Carrie-Anne Moss',
         aiHint: 'digital rain code',
       },
       {
@@ -44,6 +46,8 @@ const searchWebTool = ai.defineTool(
         availability: 'Rental',
         genre: 'Sci-Fi Neo-noir',
         year: 2017,
+        plot: 'A young blade runner\'s discovery of a long-buried secret leads him to track down former blade runner Rick Deckard, who\'s been missing for thirty years.',
+        actors: 'Ryan Gosling, Harrison Ford, Ana de Armas',
         aiHint: 'futuristic city',
       },
       {
@@ -53,6 +57,8 @@ const searchWebTool = ai.defineTool(
         availability: 'Subscription',
         genre: 'Sci-Fi Heist',
         year: 2010,
+        plot: 'A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.',
+        actors: 'Leonardo DiCaprio, Joseph Gordon-Levitt, Elliot Page',
         aiHint: 'spinning top',
       },
       {
@@ -62,6 +68,8 @@ const searchWebTool = ai.defineTool(
         availability: 'Subscription',
         genre: 'Dark Comedy Thriller',
         year: 2019,
+        plot: 'Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.',
+        actors: 'Song Kang-ho, Lee Sun-kyun, Cho Yeo-jeong',
         aiHint: 'family portrait',
       },
       {
@@ -71,6 +79,8 @@ const searchWebTool = ai.defineTool(
         availability: 'Purchase',
         genre: 'Fantasy Adventure',
         year: 2001,
+        plot: 'A meek Hobbit from the Shire and eight companions set out on a journey to destroy the powerful One Ring and save Middle-earth from the Dark Lord Sauron.',
+        actors: 'Elijah Wood, Ian McKellen, Orlando Bloom',
         aiHint: 'fantasy landscape',
       },
       {
@@ -80,6 +90,8 @@ const searchWebTool = ai.defineTool(
         availability: 'Rental',
         genre: 'Crime Film',
         year: 1994,
+        plot: 'The lives of two mob hitmen, a boxer, a gangster and his wife, and a pair of diner bandits intertwine in four tales of violence and redemption.',
+        actors: 'John Travolta, Uma Thurman, Samuel L. Jackson',
         aiHint: 'diner dance',
       },
       {
@@ -89,6 +101,8 @@ const searchWebTool = ai.defineTool(
         availability: 'Subscription',
         genre: 'Drama',
         year: 1994,
+        plot: 'The presidencies of Kennedy and Johnson, the Vietnam War, the Watergate scandal and other historical events unfold from the perspective of an Alabama man with an IQ of 75.',
+        actors: 'Tom Hanks, Robin Wright, Gary Sinise',
         aiHint: 'park bench',
       },
       {
@@ -98,6 +112,8 @@ const searchWebTool = ai.defineTool(
         availability: 'Subscription',
         genre: 'Crime Drama',
         year: 1972,
+        plot: 'The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.',
+        actors: 'Marlon Brando, Al Pacino, James Caan',
         aiHint: 'mafia boss',
       },
       {
@@ -107,6 +123,8 @@ const searchWebTool = ai.defineTool(
         availability: 'Subscription',
         genre: 'Fantasy',
         year: 2001,
+        plot: 'An orphaned boy enrolls in a school of wizardry, where he learns the truth about himself, his family and the terrible evil that haunts the magical world.',
+        actors: 'Daniel Radcliffe, Rupert Grint, Emma Watson',
         aiHint: 'magic castle',
       },
        {
@@ -116,6 +134,8 @@ const searchWebTool = ai.defineTool(
         availability: 'Subscription',
         genre: 'Sitcom',
         year: 2005,
+        plot: 'A mockumentary on a group of typical office workers, where the workday consists of ego clashes, inappropriate behavior, and tedium.',
+        actors: 'Steve Carell, Rainn Wilson, John Krasinski',
         aiHint: 'office supplies',
       },
        {
@@ -125,6 +145,8 @@ const searchWebTool = ai.defineTool(
         availability: 'Subscription',
         genre: 'Crime Drama',
         year: 2008,
+        plot: 'A high school chemistry teacher diagnosed with inoperable lung cancer turns to manufacturing and selling methamphetamine in order to secure his family\'s future.',
+        actors: 'Bryan Cranston, Aaron Paul, Anna Gunn',
         aiHint: 'desert RV',
       },
        {
@@ -134,6 +156,8 @@ const searchWebTool = ai.defineTool(
         availability: 'Rental',
         genre: 'Action',
         year: 2022,
+        plot: 'After more than thirty years of service as one of the Navy\'s top aviators, Pete Mitchell is where he belongs, pushing the envelope as a courageous test pilot and dodging the advancement in rank that would ground him.',
+        actors: 'Tom Cruise, Miles Teller, Jennifer Connelly',
         aiHint: 'fighter jet',
       },
       {
@@ -143,6 +167,8 @@ const searchWebTool = ai.defineTool(
         availability: 'Subscription',
         genre: 'Anime Thriller',
         year: 2006,
+        plot: 'An intelligent high school student goes on a secret crusade to eliminate criminals from the world after discovering a notebook that can kill anyone whose name is written in it.',
+        actors: 'Mamoru Miyano, Kappei Yamaguchi, Shido Nakamura',
         aiHint: 'shinigami apple',
       }
     ];
@@ -152,6 +178,7 @@ const searchWebTool = ai.defineTool(
     const filteredResults = fakeApiResults.filter(r => 
         r.title.toLowerCase().includes(queryLower) || 
         r.genre.toLowerCase().includes(queryLower) ||
+        r.actors.toLowerCase().includes(queryLower) ||
         input.query.includes(String(r.year)) ||
         (queryLower.includes('magic') && r.title.includes('Harry Potter')) ||
         (queryLower.includes('cruise') && r.title.includes('Top Gun')) ||

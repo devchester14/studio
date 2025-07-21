@@ -6,4 +6,7 @@ export interface Content {
   imageUrl: string;
   aiHint: string;
   reason?: string;
+  plot?: string;
+  actors?: string;
+  genre?: string;
 }

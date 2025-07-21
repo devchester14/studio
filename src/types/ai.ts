@@ -12,6 +12,9 @@ export type SemanticSearchInput = z.infer<typeof SemanticSearchInputSchema>;
 const SearchResultSchema = z.object({
   id: z.string().describe('A unique ID for the content.'),
   title: z.string().describe('The title of the found content.'),
+  plot: z.string().describe('The plot summary of the content.'),
+  actors: z.string().describe('A comma-separated list of primary actors.'),
+  genre: z.string().describe('The primary genre of the content.'),
   platform: z
     .string()
     .describe(
