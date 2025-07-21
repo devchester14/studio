@@ -4,6 +4,11 @@ import {
   generatePersonalizedRecommendations,
   type PersonalizedRecommendationsInput,
 } from "@/ai/flows/generate-personalized-recommendations";
+import {
+  semanticSearch,
+} from "@/ai/flows/semantic-search";
+import type { SemanticSearchInput } from "@/types/ai";
+
 
 export async function getRecommendations(
   input: PersonalizedRecommendationsInput
@@ -16,6 +21,19 @@ export async function getRecommendations(
     return {
       success: false,
       error: "We couldn't generate recommendations at this time. Please try again later.",
+    };
+  }
+}
+
+export async function searchContent(input: SemanticSearchInput) {
+  try {
+    const results = await semanticSearch(input);
+    return { success: true, data: results };
+  } catch (error) {
+    console.error("Error performing semantic search:", error);
+    return {
+      success: false,
+      error: "We couldn't perform the search at this time. Please try again later.",
     };
   }
 }

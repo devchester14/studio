@@ -1,58 +1,60 @@
 "use client";
 
 import { useState } from "react";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
+import { searchContent } from "@/app/actions";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Search, Loader2 } from "lucide-react";
 import { ContentCard } from "./content-card";
 import type { Content } from "@/types";
 
-const mockContent: Content[] = [
-  {
-    id: "1",
-    title: "Cyber City Chronicles",
-    platform: "Netflix",
-    availability: "Subscription",
-    imageUrl: "https://placehold.co/600x400.png",
-    aiHint: "cyberpunk city",
-  },
-  {
-    id: "2",
-    title: "Galactic Pioneers",
-    platform: "Amazon Prime",
-    availability: "Rent/Purchase",
-    imageUrl: "https://placehold.co/600x400.png",
-    aiHint: "space ship",
-  },
-  {
-    id: "3",
-    title: "The Last Sorcerer",
-    platform: "Hulu",
-    availability: "Subscription",
-    imageUrl: "https://placehold.co/600x400.png",
-    aiHint: "fantasy castle",
-  },
-  {
-    id: "4",
-    title: "Echoes of Tomorrow",
-    platform: "Apple TV+",
-    availability: "Subscription",
-    imageUrl: "https://placehold.co/600x400.png",
-    aiHint: "futuristic technology",
-  },
-];
+const searchSchema = z.object({
+  query: z.string().min(3, "Please enter a longer search query."),
+});
+
+type SearchFormValues = z.infer<typeof searchSchema>;
 
 export function SearchSection() {
-  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Content[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
   const [hasSearched, setHasSearched] = useState(false);
+  const [currentQuery, setCurrentQuery] = useState("");
 
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
+  const form = useForm<SearchFormValues>({
+    resolver: zodResolver(searchSchema),
+    defaultValues: {
+      query: "",
+    },
+  });
+
+  const onSubmit: SubmitHandler<SearchFormValues> = async (data) => {
+    setIsLoading(true);
     setHasSearched(true);
-    // Simulate API call
-    setSearchResults(mockContent);
+    setCurrentQuery(data.query);
+    setSearchResults([]);
+
+    const result = await searchContent({ query: data.query });
+
+    setIsLoading(false);
+
+    if (result.success && result.data) {
+      // The AI already returns data in the `Content` format
+      setSearchResults(result.data as Content[]);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Search Error",
+        description:
+          result.error ||
+          "An unexpected error occurred. Please try again later.",
+      });
+    }
   };
 
   return (
@@ -66,27 +68,47 @@ export function SearchSection() {
         </p>
       </div>
 
-      <form
-        onSubmit={handleSearch}
-        className="flex w-full max-w-2xl mx-auto items-center space-x-2"
-      >
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search for movies, shows, actors..."
-            className="pl-10 text-base h-12"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            aria-label="Search content"
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex w-full max-w-2xl mx-auto items-start space-x-2"
+        >
+          <FormField
+            control={form.control}
+            name="query"
+            render={({ field }) => (
+              <FormItem className="relative w-full">
+                <FormControl>
+                  <div className="relative w-full">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      {...field}
+                      type="search"
+                      placeholder="Search for 'sci-fi movies with spaceships'..."
+                      className="pl-10 text-base h-12"
+                      aria-label="Search content"
+                    />
+                  </div>
+                </FormControl>
+                 <FormMessage className="absolute" />
+              </FormItem>
+            )}
           />
-        </div>
-        <Button type="submit" size="lg" className="h-12">
-          Search
-        </Button>
-      </form>
 
-      {hasSearched && (
+          <Button type="submit" size="lg" className="h-12" disabled={isLoading}>
+            {isLoading ? <Loader2 className="animate-spin" /> : "Search"}
+          </Button>
+        </form>
+      </Form>
+
+
+      {isLoading && (
+        <div className="flex justify-center items-center py-10">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+      )}
+
+      {hasSearched && !isLoading && (
         <div>
           {searchResults.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
@@ -97,7 +119,7 @@ export function SearchSection() {
           ) : (
             <div className="text-center py-10">
               <p className="text-muted-foreground">
-                No results found for &quot;{searchQuery}&quot;. Try another search.
+                No results found for &quot;{currentQuery}&quot;. Try another search.
               </p>
             </div>
           )}

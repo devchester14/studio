@@ -3,3 +3,4 @@ config();
 
 import '@/ai/flows/summarize-content-details.ts';
 import '@/ai/flows/generate-personalized-recommendations.ts';
+import '@/ai/flows/semantic-search.ts';
