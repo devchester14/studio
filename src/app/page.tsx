@@ -14,13 +14,17 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSearch = (newQuery: string) => {
-    setQuery(newQuery);
-    if (newQuery.trim().length >= 3) {
+  const handleSearch = (searchQuery: string) => {
+    if (searchQuery.trim().length >= 3) {
       setIsLoading(true);
-      router.push(`/results?q=${encodeURIComponent(newQuery)}`);
+      router.push(`/results?q=${encodeURIComponent(searchQuery)}`);
     }
   };
+  
+  const handleVoiceSearch = (transcript: string) => {
+    setQuery(transcript);
+    handleSearch(transcript);
+  }
 
   return (
     <>
@@ -43,7 +47,7 @@ export default function Home() {
                     className="pl-10 text-base h-12"
                     aria-label="Search content"
                     value={query}
-                    onChange={(e) => handleSearch(e.target.value)}
+                    onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         handleSearch(query);
@@ -52,7 +56,7 @@ export default function Home() {
                 />
                  {isLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
             </div>
-            <VoiceSearch onTranscriptChanged={handleSearch} />
+            <VoiceSearch onTranscriptChanged={handleVoiceSearch} />
         </div>
       </main>
     </>
