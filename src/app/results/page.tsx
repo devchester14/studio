@@ -8,7 +8,7 @@ import { SearchSection } from "@/components/search-section";
 import type { Content } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Loader2 } from "lucide-react";
+import { Search } from "lucide-react";
 import { VoiceSearch } from "@/components/voice-search";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
@@ -18,7 +18,6 @@ export default function ResultsPage() {
   const initialQuery = searchParams.get("q") || "";
   
   const [query, setQuery] = useLocalStorage("searchQuery", initialQuery);
-  const [isLoadingSearch, setIsLoadingSearch] = useState(false);
   
   const [results, setResults] = useState<Content[]>([]);
   const [isLoadingResults, setIsLoadingResults] = useState(true);
@@ -34,7 +33,6 @@ export default function ResultsPage() {
 
   const handleSearch = (searchQuery: string) => {
     if (searchQuery.trim().length >= 3) {
-      setIsLoadingSearch(true);
       router.push(`/results?q=${encodeURIComponent(searchQuery)}`);
     }
   };
@@ -64,7 +62,6 @@ export default function ResultsPage() {
                       }
                     }}
                 />
-                 {isLoadingSearch && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
             </div>
             <VoiceSearch onTranscriptChanged={handleVoiceSearch} />
             <Button onClick={() => handleSearch(query)} size="lg" className="h-12">

@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/header";
-import { Search, Loader2 } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { VoiceSearch } from "@/components/voice-search";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -54,7 +54,6 @@ export default function Home() {
                       }
                     }}
                 />
-                 {isLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
             </div>
             <VoiceSearch onTranscriptChanged={handleVoiceSearch} />
         </div>
