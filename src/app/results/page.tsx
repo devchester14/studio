@@ -5,8 +5,6 @@ import { useState }from "react";
 import { useSearchParams } from "next/navigation";
 import { Header } from "@/components/header";
 import { SearchSection } from "@/components/search-section";
-import { RecommendationsSection } from "@/components/recommendations-section";
-import { Separator } from "@/components/ui/separator";
 import type { Content } from "@/types";
 
 export default function ResultsPage() {
@@ -25,13 +23,6 @@ export default function ResultsPage() {
           onLoading={setIsLoading}
           onSearched={setHasSearched}
         />
-        
-        {hasSearched && !isLoading && (
-            <>
-                <Separator className="my-8 md:my-12" />
-                <RecommendationsSection initialQuery={query} />
-            </>
-        )}
       </main>
     </>
   );
