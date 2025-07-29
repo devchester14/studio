@@ -3,42 +3,77 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Header } from "@/components/header";
 import type { Content } from "@/types";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { notFound } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, ShoppingCart, Tv, Clapperboard, Users, Tag } from "lucide-react";
+import { PlayCircle, ShoppingCart, Tv, Clapperboard, Users, Tag, ArrowLeft, Heart } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 
 export default function MovieDetailPage({ params }: { params: { id: string } }) {
   const [movie, setMovie] = useLocalStorage<Content | null>(`movie-${params.id}`, null);
+  const [likedMovies, setLikedMovies] = useLocalStorage<Content[]>("likedMovies", []);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (movie) {
-      setIsLoading(false);
-    } else {
-        // This is a fallback in case localStorage is slow or the user navigates directly.
-        // In a real app, you might fetch this from an API:
-        // fetch(`/api/movies/${params.id}`).then(res => res.json()).then(data => setMovie(data));
+    // This effect ensures that if the page is loaded directly,
+    // it tries to get the data from localStorage.
+    if (!movie) {
         const storedValue = localStorage.getItem(`movie-${params.id}`);
         if(storedValue) {
-            setMovie(JSON.parse(storedValue));
+            try {
+                setMovie(JSON.parse(storedValue));
+            } catch (e) {
+                console.error("Failed to parse movie data from localStorage", e)
+            }
         }
-        setIsLoading(false);
     }
+    setIsLoading(false);
   }, [params.id, movie, setMovie]);
+
+  const isLiked = likedMovies.some((likedMovie) => likedMovie.id === movie?.id);
+
+  const handleLike = () => {
+    if (!movie) return;
+    let updatedLikedMovies = [...likedMovies];
+    if (isLiked) {
+      updatedLikedMovies = updatedLikedMovies.filter(
+        (likedMovie) => likedMovie.id !== movie.id
+      );
+      toast({ title: "Unliked", description: `Removed "${movie.title}" from your list.` });
+    } else {
+      updatedLikedMovies.push(movie);
+      toast({ title: "Liked!", description: `Added "${movie.title}" to your list.` });
+    }
+    setLikedMovies(updatedLikedMovies);
+  };
+
 
   if (isLoading) {
     return <MovieDetailSkeleton />;
   }
 
   if (!movie) {
-    notFound();
+    // Since we can't guarantee data, show a message instead of 404
+    // to allow user to navigate back.
+    return (
+         <>
+            <Header />
+            <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 flex flex-col items-center justify-center text-center">
+                 <h1 className="text-2xl font-bold mb-4">Movie details not found</h1>
+                 <p className="text-muted-foreground mb-6">The movie details might not have been saved correctly. Please go back and try again.</p>
+                 <Button asChild>
+                    <Link href="/"><ArrowLeft /> Go Home</Link>
+                </Button>
+            </main>
+        </>
+    )
   }
 
   const getPlanDetails = (availability: string) => {
@@ -79,6 +114,11 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
     <>
       <Header />
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div className="mb-6">
+            <Button asChild variant="outline">
+                <Link href="/results"><ArrowLeft /> Back to Search</Link>
+            </Button>
+        </div>
         <div className="grid md:grid-cols-3 gap-8 md:gap-12">
           <div className="md:col-span-1">
             <div className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-2xl">
@@ -90,6 +130,9 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
                 data-ai-hint={movie.aiHint}
               />
             </div>
+             <Button onClick={handleLike} variant={isLiked ? "default" : "outline"} className="w-full mt-4">
+                <Heart className={isLiked ? "fill-current" : ""} /> {isLiked ? 'Liked' : 'Like'}
+            </Button>
           </div>
           <div className="md:col-span-2 space-y-6">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-headline">
@@ -145,9 +188,13 @@ function MovieDetailSkeleton() {
     <>
       <Header />
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div className="mb-6">
+            <Skeleton className="h-10 w-36" />
+        </div>
         <div className="grid md:grid-cols-3 gap-8 md:gap-12">
           <div className="md:col-span-1">
             <Skeleton className="w-full aspect-[2/3] rounded-lg" />
+            <Skeleton className="h-10 w-full mt-4" />
           </div>
           <div className="md:col-span-2 space-y-6">
             <Skeleton className="h-12 w-3/4" />
