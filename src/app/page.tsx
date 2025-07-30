@@ -11,12 +11,10 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 
 export default function Home() {
   const [query, setQuery] = useLocalStorage("searchQuery", "");
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleSearch = (searchQuery: string) => {
     if (searchQuery.trim().length >= 3) {
-      setIsLoading(true);
       router.push(`/results?q=${encodeURIComponent(searchQuery)}`);
     }
   };
@@ -29,7 +27,7 @@ export default function Home() {
   return (
     <>
       <Header />
-      <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center -mt-16">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center">
         <div className="w-full text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-headline">
               Find Anything, Instantly
