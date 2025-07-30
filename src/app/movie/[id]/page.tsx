@@ -16,7 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 
 
 export default function MovieDetailPage({ params }: { params: { id: string } }) {
-  const [movie, setMovie] = useLocalStorage<Content | null>(`movie-${params.id}`, null);
+  const { id } = params;
+  const [movie, setMovie] = useLocalStorage<Content | null>(`movie-${id}`, null);
   const [likedMovies, setLikedMovies] = useLocalStorage<Content[]>("likedMovies", []);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -25,7 +26,7 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
     // This effect ensures that if the page is loaded directly,
     // it tries to get the data from localStorage.
     if (!movie) {
-        const storedValue = localStorage.getItem(`movie-${params.id}`);
+        const storedValue = localStorage.getItem(`movie-${id}`);
         if(storedValue) {
             try {
                 setMovie(JSON.parse(storedValue));
@@ -35,7 +36,7 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
         }
     }
     setIsLoading(false);
-  }, [params.id, movie, setMovie]);
+  }, [id, movie, setMovie]);
 
   const isLiked = likedMovies.some((likedMovie) => likedMovie.id === movie?.id);
 
