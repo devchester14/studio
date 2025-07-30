@@ -51,6 +51,7 @@ export default function DashboardPage() {
         title: rec.title,
         platform: rec.platform,
         availability: rec.availability,
+        genre: rec.genre,
         imageUrl: `https://placehold.co/400x600.png?text=${encodeURIComponent(rec.title.replace(/\s/g, '+'))}`,
         aiHint: "movie poster",
         reason: rec.reason,
@@ -71,6 +72,7 @@ export default function DashboardPage() {
     if(recommendations.length === 0 && !hasGenerated){
         generateDashboardRecommendations();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -115,8 +117,8 @@ export default function DashboardPage() {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="-left-4" />
-            <CarouselNext className="-right-4"/>
+            <CarouselPrevious className="hidden md:flex -left-4" />
+            <CarouselNext className="hidden md:flex -right-4"/>
           </Carousel>
         )}
 

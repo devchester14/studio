@@ -21,6 +21,7 @@ const RecommendationSchema = z.object({
   title: z.string().describe('The title of the recommended content.'),
   platform: z.string().describe('The platform where the content is hosted (e.g., Netflix, Amazon Prime, Hulu).'),
   availability: z.string().describe('How the content can be accessed (e.g., rental, purchase, subscription).'),
+  genre: z.string().describe('The genre of the recommended content.'),
   reason: z.string().describe('Why this content is recommended for the user.'),
 });
 
@@ -46,6 +47,7 @@ const prompt = ai.definePrompt({
   - title: The title of the recommended content.
   - platform: The platform where the content is hosted.
   - availability: How the content can be accessed.
+  - genre: The genre of the content.
   - reason: Why this content is recommended for the user.
   Follow the schema EXACTLY.
 
