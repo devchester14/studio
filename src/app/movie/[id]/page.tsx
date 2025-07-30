@@ -16,7 +16,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 
 
-export default function MovieDetailPage({ params: { id } }: { params: { id: string } }) {
+export default function MovieDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const [movie, setMovie] = useLocalStorage<Content | null>(`movie-${id}`, null);
   const [likedMovies, setLikedMovies] = useLocalStorage<Content[]>("likedMovies", []);
   const [isLoading, setIsLoading] = useState(true);
