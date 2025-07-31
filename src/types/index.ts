@@ -10,3 +10,9 @@ export interface Content {
   actors?: string;
   genre?: string;
 }
+
+export interface AvailabilityOption {
+  platform: string;
+  availability: 'Subscription' | 'Rental' | 'Purchase';
+  price: string;
+}

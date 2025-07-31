@@ -6,19 +6,22 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Header } from "@/components/header";
-import type { Content } from "@/types";
+import type { Content, AvailabilityOption } from "@/types";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, ShoppingCart, Tv, Clapperboard, Users, Tag, ArrowLeft, Heart } from "lucide-react";
+import { PlayCircle, ShoppingCart, Tv, Clapperboard, Users, Tag, ArrowLeft, Heart, BadgeDollarSign, Loader2, AlertCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-
+import { getContentAvailability } from "@/app/actions";
+import { Badge } from "@/components/ui/badge";
 
 export default function MovieDetailPage({ params }: { params: { id: string } }) {
   const { id } = params;
   const [movie, setMovie] = useLocalStorage<Content | null>(`movie-${id}`, null);
+  const [availability, setAvailability] = useState<AvailabilityOption[]>([]);
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(true);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
   const [likedMovies, setLikedMovies] = useLocalStorage<Content[]>("likedMovies", []);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -38,6 +41,24 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
     }
     setIsLoading(false);
   }, [id, movie, setMovie]);
+
+  useEffect(() => {
+    if (movie?.title) {
+        const fetchAvailability = async () => {
+            setIsLoadingAvailability(true);
+            setAvailabilityError(null);
+            const result = await getContentAvailability({ title: movie.title });
+            if (result.success && result.data) {
+                setAvailability(result.data);
+            } else {
+                setAvailabilityError(result.error || "Could not fetch availability.");
+            }
+            setIsLoadingAvailability(false);
+        };
+        fetchAvailability();
+    }
+  }, [movie?.title]);
+
 
   const isLiked = likedMovies.some((likedMovie) => likedMovie.id === movie?.id);
 
@@ -78,39 +99,33 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
     )
   }
 
-  const getPlanDetails = (availability: string) => {
-    const plans = [];
-    if(availability.toLowerCase().includes('subscription')){
-      plans.push({
-        type: "Subscription",
-        price: "$9.99/month",
-        icon: <PlayCircle className="text-primary"/>,
-        buttonLabel: "Watch on " + movie.platform,
-        buttonVariant: "default" as const
-      })
-    }
-    if(availability.toLowerCase().includes('rent')){
-      plans.push({
-        type: "Rent",
-        price: "$3.99",
-        icon: <ShoppingCart className="text-primary"/>,
-        buttonLabel: "Rent Now",
-        buttonVariant: "secondary" as const
-      })
-    }
-    if(availability.toLowerCase().includes('purchase')){
-       plans.push({
-        type: "Purchase",
-        price: "$14.99",
-        icon: <Tv className="text-primary"/>,
-        buttonLabel: "Buy Now",
-        buttonVariant: "outline" as const
-      })
-    }
-    return plans;
+  const getCheapestOption = (options: AvailabilityOption[]) => {
+      if (options.length === 0) return null;
+      
+      const pricedOptions = options.filter(o => o.price !== 'Subscription');
+      if(pricedOptions.length === 0) return null; // Only subscriptions
+
+      return pricedOptions.reduce((cheapest, current) => {
+          const cheapestPrice = parseFloat(cheapest.price.replace('$', ''));
+          const currentPrice = parseFloat(current.price.replace('$', ''));
+          return currentPrice < cheapestPrice ? current : cheapest;
+      });
   }
   
-  const watchPlans = getPlanDetails(movie.availability);
+  const cheapestOption = getCheapestOption(availability);
+
+  const getIconForAvailability = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'subscription':
+        return <PlayCircle className="text-primary" />;
+      case 'rental':
+        return <ShoppingCart className="text-primary" />;
+      case 'purchase':
+        return <Tv className="text-primary" />;
+      default:
+        return <BadgeDollarSign className="text-primary" />;
+    }
+  };
 
   return (
     <>
@@ -118,7 +133,7 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         <div className="mb-6">
             <Button asChild variant="outline">
-                <Link href="/results"><ArrowLeft /> Back to Search</Link>
+                <Link href="/results?q="><ArrowLeft /> Back to Search</Link>
             </Button>
         </div>
         <div className="grid md:grid-cols-3 gap-8 md:gap-12">
@@ -165,18 +180,39 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
             
             <div className="space-y-4">
                 <h2 className="text-3xl font-bold font-headline">Where to Watch</h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {watchPlans.map(plan => (
-                        <div key={plan.type} className="border rounded-lg p-4 flex flex-col items-start gap-4 bg-secondary/30">
-                            <div className="flex items-center gap-3">
-                                {plan.icon}
-                                <h4 className="text-xl font-semibold">{plan.type}</h4>
+                {isLoadingAvailability && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="animate-spin" />
+                    <span>Finding the best deals for you...</span>
+                  </div>
+                )}
+                {availabilityError && (
+                    <div className="flex items-center gap-2 text-destructive">
+                        <AlertCircle />
+                        <span>{availabilityError}</span>
+                    </div>
+                )}
+                {!isLoadingAvailability && !availabilityError && (
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {availability.map(option => (
+                            <div key={`${option.platform}-${option.availability}`} className="border rounded-lg p-4 flex flex-col items-start gap-4 bg-secondary/30 relative">
+                                {cheapestOption && cheapestOption.platform === option.platform && cheapestOption.price === option.price && (
+                                    <Badge className="absolute -top-3 right-2">Best Deal</Badge>
+                                )}
+                                <div className="flex items-center gap-3">
+                                    {getIconForAvailability(option.availability)}
+                                    <h4 className="text-xl font-semibold">{option.platform}</h4>
+                                </div>
+                                <p className="text-lg font-semibold">{option.availability}</p>
+                                <p className="text-2xl font-bold">{option.price}</p>
+                                <Button className="w-full mt-auto">Go to {option.platform}</Button>
                             </div>
-                            <p className="text-2xl font-bold">{plan.price}</p>
-                            <Button variant={plan.buttonVariant} className="w-full mt-auto">{plan.buttonLabel}</Button>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
+                 {!isLoadingAvailability && !availabilityError && availability.length === 0 && (
+                  <p className="text-muted-foreground">No availability information found for this title.</p>
+                 )}
             </div>
           </div>
         </div>

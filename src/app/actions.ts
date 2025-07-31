@@ -11,6 +11,7 @@ import {
   textToSpeech,
 } from "@/ai/flows/text-to-speech";
 import type { SemanticSearchInput } from "@/types/ai";
+import { findContentAvailability, type FindContentAvailabilityInput } from "@/ai/flows/find-content-availability";
 
 
 export async function getRecommendations(
@@ -52,4 +53,17 @@ export async function getSpeech(text: string) {
         error: "We couldn't generate speech at this time. Please try again later.",
         };
     }
+}
+
+export async function getContentAvailability(input: FindContentAvailabilityInput) {
+  try {
+    const results = await findContentAvailability(input);
+    return { success: true, data: results };
+  } catch (error) {
+    console.error("Error finding content availability:", error);
+    return {
+      success: false,
+      error: "We couldn't find availability at this time. Please try again later.",
+    };
+  }
 }
