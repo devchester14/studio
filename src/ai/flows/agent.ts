@@ -17,7 +17,7 @@ import {
 const searchWebTool = ai.defineTool(
   {
     name: 'searchWeb',
-    description: 'Search the web for information about movies and TV shows.',
+    description: 'Search the web for information about movies, TV shows, and live sports events.',
     inputSchema: z.object({
       query: z.string().describe('The search query.'),
     }),
@@ -25,7 +25,7 @@ const searchWebTool = ai.defineTool(
   },
   async input => {
     console.log(`[Web Search] Searching for: ${input.query}`);
-    // In a real application, you would call a search API (e.g., Google Search API or a movie database API) here.
+    // In a real application, you would call a search API (e.g., Google Search API or a movie/sports database API) here.
     // For this example, we'll return a more extensive simulated result set.
     const fakeApiResults = [
       {
@@ -170,7 +170,29 @@ const searchWebTool = ai.defineTool(
         plot: 'An intelligent high school student goes on a secret crusade to eliminate criminals from the world after discovering a notebook that can kill anyone whose name is written in it.',
         actors: 'Mamoru Miyano, Kappei Yamaguchi, Shido Nakamura',
         aiHint: 'shinigami apple',
-      }
+      },
+      {
+        id: '201',
+        title: 'Champions League Final: Real Madrid vs. Liverpool',
+        platform: 'Paramount+',
+        availability: 'Live Subscription',
+        genre: 'Soccer',
+        year: 2024,
+        plot: 'The final match of the UEFA Champions League, featuring two of the biggest clubs in Europe.',
+        actors: 'Real Madrid, Liverpool',
+        aiHint: 'soccer stadium',
+      },
+      {
+        id: '202',
+        title: 'NBA Finals: Game 7',
+        platform: 'ESPN+',
+        availability: 'Live Subscription',
+        genre: 'Basketball',
+        year: 2024,
+        plot: 'The deciding game of the NBA championship series. Winner takes all.',
+        actors: 'Boston Celtics, Golden State Warriors',
+        aiHint: 'basketball court',
+      },
     ];
 
     // Simulate filtering based on the query to make it seem more real
@@ -182,7 +204,9 @@ const searchWebTool = ai.defineTool(
         input.query.includes(String(r.year)) ||
         (queryLower.includes('magic') && r.title.includes('Harry Potter')) ||
         (queryLower.includes('cruise') && r.title.includes('Top Gun')) ||
-        (queryLower.includes('death') && r.title.includes('Death Note'))
+        (queryLower.includes('death') && r.title.includes('Death Note')) ||
+        (queryLower.includes('soccer') && r.genre.toLowerCase().includes('soccer')) ||
+        (queryLower.includes('basketball') && r.genre.toLowerCase().includes('basketball'))
     );
 
     return JSON.stringify(filteredResults.length > 0 ? filteredResults : fakeApiResults.slice(0,4));
@@ -200,23 +224,24 @@ const prompt = ai.definePrompt({
   input: {schema: SemanticSearchInputSchema},
   output: {schema: SemanticSearchOutputSchema},
   tools: [searchWebTool],
-  prompt: `You are an emotionally intelligent movie and TV show search engine.
-A user will provide a query. Your first step is to determine the user's intent. Are they searching for a specific title, or are they expressing a mood or a desire for a certain genre?
+  prompt: `You are an emotionally intelligent movie, TV show, and live sports search engine.
+A user will provide a query. Your first step is to determine the user's intent. Are they searching for a specific title, a live event, or are they expressing a mood or a desire for a certain genre?
 
-- If the query is a direct title, actor, or plot description, use the web search tool to find relevant content.
+- If the query is a direct title, actor, plot description, or sports team, use the web search tool to find relevant content.
 - If the query describes a mood, sentiment, or feeling (e.g., "I'm sad," "I want to laugh," "something romantic"), interpret that mood and translate it into a search query for the tool. For example:
   - "I'm sad" -> search for "comedy" or "feel-good" or "uplifting" movies.
   - "I want a romantic movie" -> search for "romance" or "romantic comedy".
   - "Something scary" -> search for "horror" or "thriller".
-- The user's query may be a direct title, a description of the plot, actors, or a general theme.
+- The user's query may be a direct title, a description of the plot, actors, a general theme, or a live event.
 
 After interpreting the query and using the tool, return a list of matching content based on the tool's output. For each result, provide all the fields in the output schema.
 For 'imageUrl', generate a url using https://placehold.co/400x600.png.
-For 'aiHint', provide a short, two-word hint for image generation related to the movie title.
+For 'aiHint', provide a short, two-word hint for image generation related to the content title.
 
 Example Scenarios:
 - If the query is "movie with magic wands", you might search for "movies about magic" and return results like "Harry Potter".
 - If the query is "I want to watch something happy", you would search the tool for "comedy" or "feel-good" and return results like "The Office" or "Forrest Gump".
+- If the query is "where can I watch the soccer game", you would search the tool for "soccer" or "live sports" and return results like "Champions League Final".
 
 User Query: {{{query}}}
   
