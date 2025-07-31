@@ -1,7 +1,7 @@
 // src/app/results/page.tsx
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Header } from "@/components/header";
 import type { Content } from "@/types";
@@ -17,62 +17,61 @@ import { useUser } from "@/hooks/use-user";
 function ResultsPageComponent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialQuery = searchParams.get("q") || "";
+  const urlQuery = searchParams.get("q") || "";
   
-  const { query, setQuery, searchResults, setSearchResults } = useUser();
+  const { query, setQuery, searchResults, setSearchResults, isLoading: isUserLoading } = useUser();
   const { toast } = useToast();
   
-  const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const performSearch = useCallback(async (searchQuery: string) => {
+    if (searchQuery.trim().length < 3) {
+      setSearchResults([]);
+      return;
+    }
+    
+    setIsSearching(true);
+    const result = await searchContent({ query: searchQuery });
+
+    if (result.success && result.data) {
+      setSearchResults(result.data as Content[]);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Search Error",
+        description:
+          result.error ||
+          "An unexpected error occurred. Please try again later.",
+      });
+      setSearchResults([]);
+    }
+    setIsSearching(false);
+  }, [setSearchResults, toast]);
 
   useEffect(() => {
-    // Sync query in local storage with URL param on initial load
-    if(initialQuery && query !== initialQuery){
-        setQuery(initialQuery);
+    // If the URL has a query, trust it as the source of truth
+    if (urlQuery) {
+        setQuery(urlQuery);
+        performSearch(urlQuery);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialQuery]);
-  
-  useEffect(() => {
-    const performSearch = async () => {
-      if (query.trim().length < 3) {
-        setSearchResults([]);
-        setIsLoading(false);
-        return;
-      }
-      
-      setIsLoading(true);
-      const result = await searchContent({ query });
-
-      if (result.success && result.data) {
-        setSearchResults(result.data as Content[]);
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Search Error",
-          description:
-            result.error ||
-            "An unexpected error occurred. Please try again later.",
-        });
-        setSearchResults([]);
-      }
-      setIsLoading(false);
-    };
-
-    performSearch();
-  }, [query, setSearchResults, toast]);
+  }, [urlQuery]);
 
 
-  const handleSearch = (searchQuery: string) => {
-    if (searchQuery.trim().length >= 3) {
-        setQuery(searchQuery);
-        router.push(`/results?q=${encodeURIComponent(searchQuery)}`);
+  const handleSearchSubmit = (newQuery: string) => {
+    if (newQuery.trim().length >= 3) {
+        setQuery(newQuery);
+        router.push(`/results?q=${encodeURIComponent(newQuery)}`);
     }
   };
 
   const handleVoiceSearch = (transcript: string) => {
-    setQuery(transcript);
-    handleSearch(transcript);
+    handleSearchSubmit(transcript);
   };
+  
+  if (isUserLoading) {
+      return <div className="flex-1 flex justify-center items-center"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
+  }
 
   return (
     <>
@@ -90,24 +89,24 @@ function ResultsPageComponent() {
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
-                        handleSearch(query);
+                        handleSearchSubmit(e.currentTarget.value);
                       }
                     }}
                 />
             </div>
             <VoiceSearch onTranscriptChanged={handleVoiceSearch} />
-            <Button onClick={() => handleSearch(query)} size="lg" className="h-12">
-                Search
+            <Button onClick={() => handleSearchSubmit(query)} size="lg" className="h-12" disabled={isSearching}>
+                {isSearching ? <Loader2 className="animate-spin" /> : 'Search'}
             </Button>
         </div>
 
-        {isLoading && (
+        {isSearching && (
             <div className="flex justify-center items-center py-10">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
             </div>
         )}
 
-        {!isLoading && searchResults.length > 0 && (
+        {!isSearching && searchResults.length > 0 && (
             <section id="search-results" className="space-y-8">
                 <div className="text-center">
                     <h2 className="text-3xl font-bold tracking-tight font-headline">
@@ -122,7 +121,7 @@ function ResultsPageComponent() {
             </section>
         )}
 
-        {!isLoading && searchResults.length === 0 && query && (
+        {!isSearching && searchResults.length === 0 && query && (
              <div className="text-center py-10">
                 <p className="text-muted-foreground">
                 No results found for &quot;{query}&quot;. Try another search.

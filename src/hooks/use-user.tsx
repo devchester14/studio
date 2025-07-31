@@ -1,17 +1,19 @@
 // src/hooks/use-user.tsx
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useLocalStorage } from './use-local-storage';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import type { Content } from '@/types';
+import * as db from '@/lib/db';
+import { useLocalStorage } from './use-local-storage';
 
-type User = 'user1' | 'user2';
+type User = db.User;
 
 interface UserContextType {
-    user: User | null;
+    user: User;
     setUser: (user: User) => void;
     likedMovies: Content[];
-    setLikedMovies: (movies: Content[]) => void;
+    toggleLikeMovie: (movie: Content) => void;
+    isMovieLiked: (movieId: string) => boolean;
     query: string;
     setQuery: (query: string) => void;
     searchResults: Content[];
@@ -22,36 +24,55 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useLocalStorage<User | null>('currentUser', 'user1');
+    // We still use localStorage for the *current user* so it persists across reloads.
+    const [user, setUser] = useLocalStorage<User>('currentUser', 'user1');
     const [isLoading, setIsLoading] = useState(true);
 
-    const [likedMovies, setLikedMovies] = useLocalStorage<Content[]>(
-        user ? `${user}_likedMovies` : 'likedMovies',
-        []
-    );
-    const [query, setQuery] = useLocalStorage<string>(
-        user ? `${user}_searchQuery` : 'searchQuery',
-        ''
-    );
-     const [searchResults, setSearchResults] = useLocalStorage<Content[]>(
-        user ? `${user}_searchResults` : 'searchResults',
-        []
-    );
-
+    // All other data now comes from our simulated DB
+    const [likedMovies, setLikedMoviesState] = useState<Content[]>([]);
+    const [query, setQueryState] = useState<string>('');
+    const [searchResults, setSearchResultsState] = useState<Content[]>([]);
+    
+    // Load data from DB when user changes
     useEffect(() => {
-        // This effect ensures that when the user switches,
-        // we re-initialize the localStorage hooks with the new user-specific keys.
-        // It's a bit of a re-render, but it correctly loads the new user's data.
-        if (user) {
-            setIsLoading(false);
-        }
+        setIsLoading(true);
+        const userData = db.getUserData(user);
+        setLikedMoviesState(userData.likedMovies);
+        setQueryState(userData.searchQuery);
+        setSearchResultsState(userData.searchResults);
+        setIsLoading(false);
     }, [user]);
+
+    const setQuery = useCallback((newQuery: string) => {
+        setQueryState(newQuery);
+        db.setSearchQuery(user, newQuery);
+    },[user]);
+
+    const setSearchResults = useCallback((results: Content[]) => {
+        setSearchResultsState(results);
+        db.setSearchResults(user, results);
+    }, [user]);
+
+    const isMovieLiked = useCallback((movieId: string) => {
+       return likedMovies.some(m => m.id === movieId);
+    }, [likedMovies]);
+
+    const toggleLikeMovie = useCallback((movie: Content) => {
+        if (isMovieLiked(movie.id)) {
+            db.removeLikedMovie(user, movie.id);
+        } else {
+            db.addLikedMovie(user, movie);
+        }
+        // refresh state from DB
+        setLikedMoviesState([...db.getLikedMovies(user)]);
+    }, [user, isMovieLiked]);
     
     const value = {
         user,
         setUser,
         likedMovies,
-        setLikedMovies,
+        toggleLikeMovie,
+        isMovieLiked,
         query,
         setQuery,
         searchResults,
@@ -61,7 +82,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     return (
         <UserContext.Provider value={value}>
-            {children}
+            {!isLoading ? children : null /* Or a loading spinner */}
         </UserContext.Provider>
     );
 }

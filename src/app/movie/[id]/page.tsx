@@ -1,4 +1,3 @@
-
 // src/app/movie/[id]/page.tsx
 "use client";
 
@@ -7,7 +6,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { Header } from "@/components/header";
 import type { Content, AvailabilityOption } from "@/types";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Button } from "@/components/ui/button";
 import { PlayCircle, ShoppingCart, Tv, Clapperboard, Users, Tag, ArrowLeft, Heart, BadgeDollarSign, Loader2, AlertCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
@@ -17,31 +15,29 @@ import { getContentAvailability } from "@/app/actions";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/hooks/use-user";
 
-export default function MovieDetailPage({ params }: { params: { id: string } }) {
-  const { id } = params;
-  const { user, likedMovies, setLikedMovies } = useUser();
-  const [movie, setMovie] = useLocalStorage<Content | null>(`movie-${id}`, null);
+// This component now fetches its own data if it doesn't have it.
+function MovieDetailContent({ storedMovie }: { storedMovie: Content | null }) {
+  const { id } = storedMovie || {};
+  const { user, isMovieLiked, toggleLikeMovie } = useUser();
+  const [movie, setMovie] = useState<Content | null>(storedMovie);
   const [availability, setAvailability] = useState<AvailabilityOption[]>([]);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(true);
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    // This effect ensures that if the page is loaded directly,
-    // it tries to get the data from localStorage.
-    if (!movie) {
-        const storedValue = localStorage.getItem(`movie-${id}`);
-        if(storedValue) {
-            try {
-                setMovie(JSON.parse(storedValue));
-            } catch (e) {
-                console.error("Failed to parse movie data from localStorage", e)
-            }
+    // This logic can be expanded to fetch movie details from an API if not found in storage.
+    // For the hackathon, we assume if it's not in the DB, it's not available.
+    if (!movie && id) {
+        // Find movie from user's search results or liked movies as a fallback
+        const userData = db.getUserData(user);
+        const foundMovie = [...userData.searchResults, ...userData.likedMovies].find(m => m.id === id);
+        if (foundMovie) {
+            setMovie(foundMovie);
         }
     }
-    setIsLoading(false);
-  }, [id, movie, setMovie]);
+  }, [id, movie, user]);
+
 
   useEffect(() => {
     if (movie?.title) {
@@ -61,37 +57,22 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
   }, [movie?.title]);
 
 
-  const isLiked = likedMovies.some((likedMovie) => likedMovie.id === movie?.id);
-
   const handleLike = () => {
     if (!movie) return;
-    let updatedLikedMovies = [...likedMovies];
-    if (isLiked) {
-      updatedLikedMovies = updatedLikedMovies.filter(
-        (likedMovie) => likedMovie.id !== movie.id
-      );
-      toast({ title: "Unliked", description: `Removed "${movie.title}" from your list.` });
-    } else {
-      updatedLikedMovies.push(movie);
-      toast({ title: "Liked!", description: `Added "${movie.title}" to your list.` });
-    }
-    setLikedMovies(updatedLikedMovies);
+    const wasLiked = isMovieLiked(movie.id);
+    toggleLikeMovie(movie);
+    toast({ 
+        title: wasLiked ? "Unliked" : "Liked!", 
+        description: `"${movie.title}" was ${wasLiked ? 'removed from' : 'added to'} your list.` 
+    });
   };
 
-
-  if (isLoading || !user) {
-    return <MovieDetailSkeleton />;
-  }
-
   if (!movie) {
-    // Since we can't guarantee data, show a message instead of 404
-    // to allow user to navigate back.
     return (
          <>
-            <Header />
             <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 flex flex-col items-center justify-center text-center">
                  <h1 className="text-2xl font-bold mb-4">Movie details not found</h1>
-                 <p className="text-muted-foreground mb-6">The movie details might not have been saved correctly. Please go back and try again.</p>
+                 <p className="text-muted-foreground mb-6">The movie details could not be found. Please go back and try again.</p>
                  <Button asChild>
                     <Link href="/"><ArrowLeft /> Go Home</Link>
                 </Button>
@@ -100,6 +81,8 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
     )
   }
 
+  const isLiked = isMovieLiked(movie.id);
+
   const getCheapestOption = (options: AvailabilityOption[]) => {
       if (options.length === 0) return null;
       
@@ -107,8 +90,8 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
       if(pricedOptions.length === 0) return null; // Only subscriptions
 
       return pricedOptions.reduce((cheapest, current) => {
-          const cheapestPrice = parseFloat(cheapest.price.replace('$', ''));
-          const currentPrice = parseFloat(current.price.replace('$', ''));
+          const cheapestPrice = parseFloat(cheapest.price.replace(/[^0-9.-]+/g,""));
+          const currentPrice = parseFloat(current.price.replace(/[^0-9.-]+/g,""));
           return currentPrice < cheapestPrice ? current : cheapest;
       });
   }
@@ -129,12 +112,10 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
   };
 
   return (
-    <>
-      <Header />
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         <div className="mb-6">
             <Button asChild variant="outline">
-                <Link href="/results?q="><ArrowLeft /> Back to Search</Link>
+                <Link href="/"><ArrowLeft /> Back to Search</Link>
             </Button>
         </div>
         <div className="grid md:grid-cols-3 gap-8 md:gap-12">
@@ -218,8 +199,26 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
           </div>
         </div>
       </main>
-    </>
   );
+}
+
+
+// --- Main Page Component ---
+import * as db from '@/lib/db';
+import { useLocalStorage } from "@/hooks/use-local-storage";
+
+export default function MovieDetailPage({ params }: { params: { id: string } }) {
+    const { id } = params;
+    // We use a temporary local storage to pass the movie object from the card click to the page.
+    // This is a simple hackathon-friendly way to avoid complex state management or redundant API calls.
+    const [storedMovie] = useLocalStorage<Content | null>(`movie-${id}`, null);
+    
+    return (
+        <>
+            <Header />
+            <MovieDetailContent storedMovie={storedMovie} />
+        </>
+    );
 }
 
 function MovieDetailSkeleton() {

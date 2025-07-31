@@ -19,13 +19,16 @@ interface ContentCardProps {
 }
 
 export function ContentCard({ content }: ContentCardProps) {
-  const [, setMovie] = useLocalStorage<Content | null>(`movie-${content.id}`, null);
+  // We use a temporary local storage item to pass the full movie object
+  // to the detail page. This is a hackathon-friendly way to avoid
+  // having to re-fetch data on the detail page.
+  const [, setMovieForDetailPage] = useLocalStorage<Content | null>(`movie-${content.id}`, null);
 
   const renderActionButtons = () => {
     const availabilityLower = content.availability.toLowerCase();
     const actions = [];
 
-    if (availabilityLower === "subscription") {
+    if (availabilityLower.includes("subscription")) {
       actions.push(
         <Button key="watch" className="flex-1">
           <PlayCircle />
@@ -62,7 +65,7 @@ export function ContentCard({ content }: ContentCardProps) {
   };
   
   const handleCardClick = () => {
-    setMovie(content);
+    setMovieForDetailPage(content);
   };
 
   return (

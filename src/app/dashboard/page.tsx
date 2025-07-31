@@ -25,15 +25,17 @@ interface RecommendationCarousel {
 }
 
 export default function DashboardPage() {
-  const { user, likedMovies, searchQuery } = useUser();
+  const { user, likedMovies, query, isLoading: isUserLoading } = useUser();
   const [carousels, setCarousels] = useState<RecommendationCarousel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
   const { toast } = useToast();
 
   const generateDashboardRecommendations = useCallback(async () => {
+    if (!user) return;
     setIsLoading(true);
     setHasGenerated(true);
+    setCarousels([]);
 
     const newCarousels: RecommendationCarousel[] = [];
     
@@ -41,14 +43,14 @@ export default function DashboardPage() {
       likedMovies.map((m) => m.title).join(", ") || "No viewing history yet.";
 
     // Carousel 1: Based on recent search
-    if (searchQuery) {
+    if (query) {
         const searchRecResult = await getRecommendations({
-            userPreferences: `Based on my recent search for "${searchQuery}", suggest some similar movies or shows.`,
+            userPreferences: `Based on my recent search for "${query}", suggest some similar movies or shows.`,
             viewingHistory,
         });
         if (searchRecResult.success && searchRecResult.data && searchRecResult.data.length > 0) {
             newCarousels.push({
-                title: `Inspired by your search for "${searchQuery}"`,
+                title: `Inspired by your search for "${query}"`,
                 recommendations: formatRecommendations(searchRecResult.data, 'search-rec'),
             });
         }
@@ -97,7 +99,7 @@ export default function DashboardPage() {
 
     setCarousels(newCarousels);
     setIsLoading(false);
-  }, [likedMovies, searchQuery, toast]);
+  }, [likedMovies, query, toast, user]);
   
   const formatRecommendations = (recs: any[], prefix: string): Content[] => {
       return recs.map((rec, index) => ({
@@ -113,14 +115,21 @@ export default function DashboardPage() {
       }));
   }
 
-  // Automatically generate recommendations on first load or when user changes
   useEffect(() => {
-    if(!user) return;
-    // For a hackathon, let's regenerate every time the user visits the dashboard
-    // to ensure the data is fresh based on their latest likes/searches.
+    if(isUserLoading || !user) return;
     generateDashboardRecommendations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [isUserLoading, user, generateDashboardRecommendations]);
+  
+  if (isUserLoading) {
+    return (
+        <>
+            <Header />
+            <div className="flex-1 flex justify-center items-center">
+                <Loader2 className="h-16 w-16 animate-spin text-primary" />
+            </div>
+        </>
+    );
+  }
 
   return (
     <>
