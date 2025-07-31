@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { getRecommendations } from "@/app/actions";
+import { getRecommendations, getSubscriptionAnalysis } from "@/app/actions";
 import { Header } from "@/components/header";
 import {
   Carousel,
@@ -13,10 +13,11 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { ContentCard } from "@/components/content-card";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Content } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import { SubscriptionAnalysis } from "@/components/subscription-analysis";
 
 export default function DashboardPage() {
   const [recommendations, setRecommendations] = useLocalStorage<Content[]>(
@@ -85,13 +86,17 @@ export default function DashboardPage() {
                 Your Personal Dashboard
                 </h1>
                 <p className="text-muted-foreground text-lg">
-                AI-powered recommendations based on your taste.
+                AI-powered recommendations and insights based on your taste.
                 </p>
             </div>
             <Button onClick={generateDashboardRecommendations} disabled={isLoading} size="lg">
                 {isLoading ? <Loader2 className="animate-spin" /> : <Sparkles />}
                 Refresh Recommendations
             </Button>
+        </div>
+        
+        <div className="mb-12">
+            <SubscriptionAnalysis />
         </div>
 
         {isLoading && (

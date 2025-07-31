@@ -12,6 +12,7 @@ import {
 } from "@/ai/flows/text-to-speech";
 import type { SemanticSearchInput } from "@/types/ai";
 import { findContentAvailability, type FindContentAvailabilityInput } from "@/ai/flows/find-content-availability";
+import { analyzeSubscriptions, type SubscriptionAnalysisInput } from "@/ai/flows/analyze-subscriptions";
 
 
 export async function getRecommendations(
@@ -66,4 +67,17 @@ export async function getContentAvailability(input: FindContentAvailabilityInput
       error: "We couldn't find availability at this time. Please try again later.",
     };
   }
+}
+
+export async function getSubscriptionAnalysis(input: SubscriptionAnalysisInput) {
+    try {
+        const result = await analyzeSubscriptions(input);
+        return { success: true, data: result };
+    } catch (error) {
+        console.error("Error analyzing subscriptions:", error);
+        return {
+            success: false,
+            error: "We couldn't analyze your subscriptions at this time. Please try again later.",
+        };
+    }
 }
