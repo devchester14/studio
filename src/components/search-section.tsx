@@ -59,7 +59,7 @@ export function SearchSection({ onResults, onLoading, onSearched }: SearchSectio
     };
 
     performSearch();
-  }, [query]);
+  }, [query, onLoading, onResults, onSearched, setSearchResults, toast]);
 
   if (isLoading) {
     return (
