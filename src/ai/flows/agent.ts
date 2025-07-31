@@ -200,19 +200,27 @@ const prompt = ai.definePrompt({
   input: {schema: SemanticSearchInputSchema},
   output: {schema: SemanticSearchOutputSchema},
   tools: [searchWebTool],
-  prompt: `You are a movie and TV show search engine.
-  A user will provide a query. Use the web search tool to find relevant content.
-  The user's query may be a direct title, a description of the plot, actors, or a general theme.
-  Interpret the query, use the tool, and then return a list of matching content based on the tool's output. For each result, provide all the fields in the output schema.
-  For 'imageUrl', generate a url using https://placehold.co/400x600.png.
-  For 'aiHint', provide a short, two-word hint for image generation related to the movie title.
+  prompt: `You are an emotionally intelligent movie and TV show search engine.
+A user will provide a query. Your first step is to determine the user's intent. Are they searching for a specific title, or are they expressing a mood or a desire for a certain genre?
 
-  If the query is "movie with magic wands", you might search for "movies about magic" and return results like "Harry Potter".
-  If the query is "Tom Cruise action movie", you would search for that and return movies like "Top Gun: Maverick".
+- If the query is a direct title, actor, or plot description, use the web search tool to find relevant content.
+- If the query describes a mood, sentiment, or feeling (e.g., "I'm sad," "I want to laugh," "something romantic"), interpret that mood and translate it into a search query for the tool. For example:
+  - "I'm sad" -> search for "comedy" or "feel-good" or "uplifting" movies.
+  - "I want a romantic movie" -> search for "romance" or "romantic comedy".
+  - "Something scary" -> search for "horror" or "thriller".
+- The user's query may be a direct title, a description of the plot, actors, or a general theme.
 
-  User Query: {{{query}}}
+After interpreting the query and using the tool, return a list of matching content based on the tool's output. For each result, provide all the fields in the output schema.
+For 'imageUrl', generate a url using https://placehold.co/400x600.png.
+For 'aiHint', provide a short, two-word hint for image generation related to the movie title.
+
+Example Scenarios:
+- If the query is "movie with magic wands", you might search for "movies about magic" and return results like "Harry Potter".
+- If the query is "I want to watch something happy", you would search the tool for "comedy" or "feel-good" and return results like "The Office" or "Forrest Gump".
+
+User Query: {{{query}}}
   
-  Return up to 10 results.
+Return up to 10 results.
   `,
 });
 
