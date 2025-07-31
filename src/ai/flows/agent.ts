@@ -193,6 +193,17 @@ const searchWebTool = ai.defineTool(
         actors: 'Boston Celtics, Golden State Warriors',
         aiHint: 'basketball court',
       },
+      {
+        id: '203',
+        title: 'IPL Cricket Final: Mumbai Indians vs. Chennai Super Kings',
+        platform: 'Hotstar',
+        availability: 'Live Subscription',
+        genre: 'Cricket',
+        year: 2024,
+        plot: 'The final match of the Indian Premier League, the biggest T20 cricket tournament.',
+        actors: 'Mumbai Indians, Chennai Super Kings',
+        aiHint: 'cricket stadium night',
+      },
     ];
 
     // Simulate filtering based on the query to make it seem more real
@@ -206,7 +217,8 @@ const searchWebTool = ai.defineTool(
         (queryLower.includes('cruise') && r.title.includes('Top Gun')) ||
         (queryLower.includes('death') && r.title.includes('Death Note')) ||
         (queryLower.includes('soccer') && r.genre.toLowerCase().includes('soccer')) ||
-        (queryLower.includes('basketball') && r.genre.toLowerCase().includes('basketball'))
+        (queryLower.includes('basketball') && r.genre.toLowerCase().includes('basketball')) ||
+        ((queryLower.includes('ipl') || queryLower.includes('cricket')) && r.genre.toLowerCase().includes('cricket'))
     );
 
     return JSON.stringify(filteredResults.length > 0 ? filteredResults : fakeApiResults.slice(0,4));
