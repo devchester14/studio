@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { AppLogo } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-import { LayoutGrid, User, Users } from "lucide-react";
+import { LayoutGrid, User, ShieldCheck } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import {
   DropdownMenu,
@@ -31,6 +31,12 @@ export function Header() {
           <Link href="/dashboard">
             <LayoutGrid />
             Dashboard
+          </Link>
+        </Button>
+         <Button asChild variant="ghost">
+          <Link href="/admin">
+            <ShieldCheck />
+            Admin
           </Link>
         </Button>
         <DropdownMenu>
