@@ -1,9 +1,9 @@
 // src/app/dashboard/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { useLocalStorage } from "@/hooks/use-local-storage";
-import { getRecommendations, getSubscriptionAnalysis } from "@/app/actions";
+import { useState, useEffect, useCallback } from "react";
+import { useUser } from "@/hooks/use-user";
+import { getRecommendations } from "@/app/actions";
 import { Header } from "@/components/header";
 import {
   Carousel,
@@ -13,42 +13,95 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { ContentCard } from "@/components/content-card";
-import { Loader2, Sparkles, Wallet } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Content } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { SubscriptionAnalysis } from "@/components/subscription-analysis";
 
+interface RecommendationCarousel {
+    title: string;
+    recommendations: Content[];
+}
+
 export default function DashboardPage() {
-  const [recommendations, setRecommendations] = useLocalStorage<Content[]>(
-    "dashboard_recommendations",
-    []
-  );
+  const { user, likedMovies, searchQuery } = useUser();
+  const [carousels, setCarousels] = useState<RecommendationCarousel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
-  const [likedMovies] = useLocalStorage<Content[]>("likedMovies", []);
-  const [searchQuery] = useLocalStorage<string>("searchQuery", "");
   const { toast } = useToast();
 
-  const generateDashboardRecommendations = async () => {
+  const generateDashboardRecommendations = useCallback(async () => {
     setIsLoading(true);
     setHasGenerated(true);
 
+    const newCarousels: RecommendationCarousel[] = [];
+    
     const viewingHistory =
       likedMovies.map((m) => m.title).join(", ") || "No viewing history yet.";
-    const userPreferences =
-      searchQuery || "Suggest some popular and highly-rated movies.";
-      
-    const result = await getRecommendations({
-        userPreferences: `Based on my recent search for "${userPreferences}" and my liked movies, suggest something new.`,
-        viewingHistory: viewingHistory,
+
+    // Carousel 1: Based on recent search
+    if (searchQuery) {
+        const searchRecResult = await getRecommendations({
+            userPreferences: `Based on my recent search for "${searchQuery}", suggest some similar movies or shows.`,
+            viewingHistory,
+        });
+        if (searchRecResult.success && searchRecResult.data && searchRecResult.data.length > 0) {
+            newCarousels.push({
+                title: `Inspired by your search for "${searchQuery}"`,
+                recommendations: formatRecommendations(searchRecResult.data, 'search-rec'),
+            });
+        }
+    }
+
+    // Carousel 2: Based on favorite genre
+    const genreCounts: Record<string, number> = likedMovies.reduce((acc, movie) => {
+        if(movie.genre) {
+            acc[movie.genre] = (acc[movie.genre] || 0) + 1;
+        }
+        return acc;
+    }, {} as Record<string, number>);
+
+    const favoriteGenre = Object.keys(genreCounts).reduce((a, b) => genreCounts[a] > genreCounts[b] ? a : b, '');
+
+    if (favoriteGenre) {
+         const genreRecResult = await getRecommendations({
+            userPreferences: `I really like the ${favoriteGenre} genre. Suggest some more movies like that.`,
+            viewingHistory,
+        });
+        if (genreRecResult.success && genreRecResult.data && genreRecResult.data.length > 0) {
+            newCarousels.push({
+                title: `Because you like ${favoriteGenre}`,
+                recommendations: formatRecommendations(genreRecResult.data, 'genre-rec'),
+            });
+        }
+    }
+
+    // Carousel 3: General "Next Watch"
+    const generalRecResult = await getRecommendations({
+      userPreferences: "Suggest some popular and highly-rated movies based on my viewing history.",
+      viewingHistory,
     });
+     if (generalRecResult.success && generalRecResult.data) {
+       newCarousels.push({
+         title: "Your Next Watch",
+         recommendations: formatRecommendations(generalRecResult.data, 'general-rec'),
+       });
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Recommendation Error",
+            description: generalRecResult.error || "Could not generate recommendations."
+        });
+    }
 
+    setCarousels(newCarousels);
     setIsLoading(false);
-
-    if (result.success && result.data) {
-       const formattedData: Content[] = result.data.map((rec, index) => ({
-        id: `rec-${rec.title}-${index}`,
+  }, [likedMovies, searchQuery, toast]);
+  
+  const formatRecommendations = (recs: any[], prefix: string): Content[] => {
+      return recs.map((rec, index) => ({
+        id: `rec-${prefix}-${rec.title.replace(/\s/g, '')}-${index}`,
         title: rec.title,
         platform: rec.platform,
         availability: rec.availability,
@@ -58,23 +111,16 @@ export default function DashboardPage() {
         reason: rec.reason,
         plot: rec.reason, // Use reason as a plot substitute for display
       }));
-      setRecommendations(formattedData);
-    } else {
-        toast({
-            variant: "destructive",
-            title: "Recommendation Error",
-            description: result.error || "Could not generate recommendations."
-        });
-    }
-  };
-  
-  // Automatically generate recommendations on first load if none exist
+  }
+
+  // Automatically generate recommendations on first load or when user changes
   useEffect(() => {
-    if(recommendations.length === 0 && !hasGenerated){
-        generateDashboardRecommendations();
-    }
+    if(!user) return;
+    // For a hackathon, let's regenerate every time the user visits the dashboard
+    // to ensure the data is fresh based on their latest likes/searches.
+    generateDashboardRecommendations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
   return (
     <>
@@ -86,7 +132,7 @@ export default function DashboardPage() {
                 Your Personal Dashboard
                 </h1>
                 <p className="text-muted-foreground text-lg">
-                AI-powered recommendations and insights based on your taste.
+                Hi {user}, here are AI-powered recommendations based on your taste.
                 </p>
             </div>
             <Button onClick={generateDashboardRecommendations} disabled={isLoading} size="lg">
@@ -98,41 +144,46 @@ export default function DashboardPage() {
         <div className="mb-12">
             <SubscriptionAnalysis />
         </div>
+        
+        <div className="space-y-12">
+            {isLoading && carousels.length === 0 && (
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="h-16 w-16 animate-spin text-primary" />
+              </div>
+            )}
 
-        {isLoading && (
-          <div className="flex justify-center items-center py-20">
-            <Loader2 className="h-16 w-16 animate-spin text-primary" />
-          </div>
-        )}
-
-        {!isLoading && recommendations.length > 0 && (
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            className="w-full"
-          >
-            <CarouselContent>
-              {recommendations.map((content) => (
-                <CarouselItem key={content.id} className="md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-                  <div className="p-1 h-full">
-                    <ContentCard content={content} />
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="hidden md:flex -left-4" />
-            <CarouselNext className="hidden md:flex -right-4"/>
-          </Carousel>
-        )}
-
-        {!isLoading && recommendations.length === 0 && hasGenerated && (
-             <div className="text-center py-20">
-                <h3 className="text-2xl font-semibold">Nothing to show yet!</h3>
-                <p className="text-muted-foreground mt-2">Like some movies or use the search to get personalized recommendations.</p>
-             </div>
-        )}
+            {!isLoading && carousels.length === 0 && hasGenerated && (
+                <div className="text-center py-20">
+                    <h3 className="text-2xl font-semibold">Nothing to show yet!</h3>
+                    <p className="text-muted-foreground mt-2">Like some movies or use the search to get personalized recommendations.</p>
+                </div>
+            )}
+            
+            {carousels.map((carousel) => (
+                <div key={carousel.title}>
+                    <h2 className="text-2xl font-bold font-headline mb-4">{carousel.title}</h2>
+                    <Carousel
+                        opts={{
+                        align: "start",
+                        loop: carousel.recommendations.length > 4, // Loop only if there are enough items
+                        }}
+                        className="w-full"
+                    >
+                        <CarouselContent>
+                        {carousel.recommendations.map((content) => (
+                            <CarouselItem key={content.id} className="md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                            <div className="p-1 h-full">
+                                <ContentCard content={content} />
+                            </div>
+                            </CarouselItem>
+                        ))}
+                        </CarouselContent>
+                        <CarouselPrevious className="hidden md:flex -left-4" />
+                        <CarouselNext className="hidden md:flex -right-4"/>
+                    </Carousel>
+                </div>
+            ))}
+        </div>
       </main>
     </>
   );

@@ -7,16 +7,15 @@ import { Header } from "@/components/header";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { VoiceSearch } from "@/components/voice-search";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useDebounce } from "@/hooks/use-debounce";
 import { searchContent } from "./actions";
 import { ContentCard } from "@/components/content-card";
 import type { Content } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-
+import { useUser } from "@/hooks/use-user";
 
 export default function Home() {
-  const [query, setQuery] = useLocalStorage("searchQuery", "");
+  const { query, setQuery } = useUser();
   const [results, setResults] = useState<Content[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const debouncedQuery = useDebounce(query, 300);

@@ -1,14 +1,14 @@
 // src/components/subscription-analysis.tsx
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useLocalStorage } from '@/hooks/use-local-storage';
+import { useEffect, useState, memo } from 'react';
 import { getSubscriptionAnalysis } from '@/app/actions';
 import type { Content } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Wallet, Lightbulb } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import { useUser } from '@/hooks/use-user';
 
 interface AnalysisResult {
     insight: string;
@@ -16,20 +16,37 @@ interface AnalysisResult {
     suggestion: string;
 }
 
+const MemoizedBarChart = memo(({ data }: { data: {name: string, count: number}[] }) => (
+    <ResponsiveContainer width="100%" height={200}>
+        <BarChart data={data} layout="vertical" margin={{ left: 20 }}>
+            <XAxis type="number" hide />
+            <YAxis dataKey="name" type="category" width={80} tickLine={false} axisLine={false} />
+            <Tooltip cursor={{fill: 'hsl(var(--secondary))'}} contentStyle={{backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))'}}/>
+            <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+        </BarChart>
+    </ResponsiveContainer>
+));
+MemoizedBarChart.displayName = 'MemoizedBarChart';
+
+
 export function SubscriptionAnalysis() {
-    const [likedMovies] = useLocalStorage<Content[]>("likedMovies", []);
+    const { likedMovies } = useUser();
     const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
     const [platformData, setPlatformData] = useState<{name: string, count: number}[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
     
     useEffect(() => {
-        if(likedMovies.length === 0) {
-            setIsLoading(false);
-            return;
-        };
+        if(likedMovies === undefined) return; // Wait for user data to load
 
         const analyze = async () => {
+            if (likedMovies.length === 0) {
+                setIsLoading(false);
+                setPlatformData([]);
+                setAnalysis(null);
+                return;
+            }
+
             setIsLoading(true);
 
             const platformCounts = likedMovies.reduce((acc, movie) => {
@@ -59,7 +76,7 @@ export function SubscriptionAnalysis() {
 
         analyze();
     }, [likedMovies, toast]);
-
+    
     if (likedMovies.length === 0) {
         return (
             <Card>
@@ -101,13 +118,7 @@ export function SubscriptionAnalysis() {
             <CardContent className="grid md:grid-cols-2 gap-8">
                 <div>
                      <h3 className="text-lg font-semibold mb-2">Liked Content by Platform</h3>
-                    <ResponsiveContainer width="100%" height={200}>
-                        <BarChart data={platformData} layout="vertical" margin={{ left: 20 }}>
-                            <XAxis type="number" hide />
-                            <YAxis dataKey="name" type="category" width={80} tickLine={false} axisLine={false} />
-                            <Bar dataKey="count" fill="var(--color-primary)" radius={[0, 4, 4, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
+                     <MemoizedBarChart data={platformData} />
                 </div>
                 <div className="bg-secondary/50 p-6 rounded-lg flex flex-col justify-center">
                     <div className="flex items-center gap-4 mb-4">
@@ -125,12 +136,3 @@ export function SubscriptionAnalysis() {
         </Card>
     );
 }
-
-// A simple rechart color variable for the bar chart
-const style = document.createElement('style');
-style.innerHTML = `
-:root {
-  --color-primary: hsl(var(--primary));
-}
-`;
-document.head.appendChild(style);

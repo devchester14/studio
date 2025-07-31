@@ -15,14 +15,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { getContentAvailability } from "@/app/actions";
 import { Badge } from "@/components/ui/badge";
+import { useUser } from "@/hooks/use-user";
 
 export default function MovieDetailPage({ params }: { params: { id: string } }) {
   const { id } = params;
+  const { user, likedMovies, setLikedMovies } = useUser();
   const [movie, setMovie] = useLocalStorage<Content | null>(`movie-${id}`, null);
   const [availability, setAvailability] = useState<AvailabilityOption[]>([]);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(true);
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
-  const [likedMovies, setLikedMovies] = useLocalStorage<Content[]>("likedMovies", []);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -78,7 +79,7 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
   };
 
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return <MovieDetailSkeleton />;
   }
 
