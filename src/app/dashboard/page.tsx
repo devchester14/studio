@@ -17,7 +17,8 @@ import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Content } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { SubscriptionAnalysis } from "@/components/subscription-analysis";
+// Removed SubscriptionAnalysis import
+// import { SubscriptionAnalysis } from "@/components/subscription-analysis";
 
 interface RecommendationCarousel {
     title: string;
@@ -103,12 +104,12 @@ export default function DashboardPage() {
   
   const formatRecommendations = (recs: any[], prefix: string): Content[] => {
       return recs.map((rec, index) => ({
-        id: `rec-${prefix}-${rec.title.replace(/\s/g, '')}-${index}`,
+        id: `rec-${prefix}-${rec.title.replace(/s/g, '')}-${index}`,
         title: rec.title,
         platform: rec.platform,
         availability: rec.availability,
         genre: rec.genre,
-        imageUrl: `https://placehold.co/400x600.png?text=${encodeURIComponent(rec.title.replace(/\s/g, '+'))}`,
+        imageUrl: `https://placehold.co/400x600.png?text=${encodeURIComponent(rec.title.replace(/s/g, '+'))}`,
         aiHint: "movie poster",
         reason: rec.reason,
         plot: rec.reason, // Use reason as a plot substitute for display
@@ -150,9 +151,12 @@ export default function DashboardPage() {
             </Button>
         </div>
         
+        {/* Removed Subscription Analysis */}
+        {/*
         <div className="mb-12">
             <SubscriptionAnalysis />
         </div>
+        */}
         
         <div className="space-y-12">
             {isLoading && carousels.length === 0 && (

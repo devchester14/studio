@@ -19,6 +19,12 @@ interface UserContextType {
     searchResults: Content[];
     setSearchResults: (results: Content[]) => void;
     isLoading: boolean;
+    // Added age and location to context type
+    age: number | undefined;
+    location: { latitude: number; longitude: number } | undefined;
+    // Added setters for age and location to context type
+    setUserAge: (age: number | undefined) => void;
+    setUserLocation: (location: { latitude: number; longitude: number } | undefined) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -27,6 +33,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     // We still use localStorage for the *current user* so it persists across reloads.
     const [user, setUser] = useLocalStorage<User>('currentUser', 'user1');
     const [isLoading, setIsLoading] = useState(true);
+
+    // State for age and location
+    const [age, setAgeState] = useState<number | undefined>(undefined);
+    const [location, setLocationState] = useState<{ latitude: number; longitude: number } | undefined>(undefined);
 
     // All other data now comes from our simulated DB
     const [likedMovies, setLikedMoviesState] = useState<Content[]>([]);
@@ -40,6 +50,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setLikedMoviesState(userData.likedMovies);
         setQueryState(userData.searchQuery);
         setSearchResultsState(userData.searchResults);
+        // Load age and location from DB
+        setAgeState(db.getUserAge(user));
+        setLocationState(db.getUserLocation(user));
         setIsLoading(false);
     }, [user]);
 
@@ -67,6 +80,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setLikedMoviesState([...db.getLikedMovies(user)]);
     }, [user, isMovieLiked]);
     
+    // Functions to update age and location in DB and state
+    const setUserAge = useCallback((newAge: number | undefined) => {
+      db.setUserAge(user, newAge);
+      setAgeState(newAge);
+    }, [user]);
+
+    const setUserLocation = useCallback((newLocation: { latitude: number; longitude: number } | undefined) => {
+      db.setUserLocation(user, newLocation);
+      setLocationState(newLocation);
+    }, [user]);
+
     const value = {
         user,
         setUser,
@@ -78,6 +102,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
         searchResults,
         setSearchResults,
         isLoading,
+        // Provided age and location in context value
+        age,
+        location,
+        // Provided setters for age and location
+        setUserAge,
+        setUserLocation,
     };
 
     return (

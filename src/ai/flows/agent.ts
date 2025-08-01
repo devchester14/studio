@@ -239,6 +239,8 @@ const prompt = ai.definePrompt({
   prompt: `You are an emotionally intelligent movie, TV show, and live sports search engine.
 A user will provide a query. Your first step is to determine the user's intent. Are they searching for a specific title, a live event, or are they expressing a mood or a desire for a certain genre?
 
+**IMPORTANT: You must not generate or provide any information about adult or sexual content.**
+
 - If the query is a direct title, actor, plot description, or sports team, use the web search tool to find relevant content.
 - If the query describes a mood, sentiment, or feeling (e.g., "I'm sad," "I want to laugh," "something romantic"), interpret that mood and translate it into a search query for the tool. For example:
   - "I'm sad" -> search for "comedy" or "feel-good" or "uplifting" movies.

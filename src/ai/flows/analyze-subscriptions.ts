@@ -9,7 +9,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const SubscriptionAnalysisInputSchema = z.object({
-  platformCounts: z.string().describe('A JSON string representing the count of liked movies per platform. e.g., \'{"Netflix": 10, "Hulu": 2, "Amazon Prime": 1}\''),
+  platformCounts: z.string().describe('A JSON string representing the count of liked movies per platform. e.g., '{"Netflix": 10, "Hulu": 2, "Amazon rime": 1}''),
 });
 export type SubscriptionAnalysisInput = z.infer<typeof SubscriptionAnalysisInputSchema>;
 
@@ -33,6 +33,8 @@ const prompt = ai.definePrompt({
   input: {schema: SubscriptionAnalysisInputSchema},
   output: {schema: SubscriptionAnalysisOutputSchema},
   prompt: `You are a helpful assistant for a TV streaming app. Your goal is to help users save money by analyzing their viewing habits.
+
+**IMPORTANT: You must not generate any adult or sexual content in your insight or suggestion.**
 
 You will be given a JSON object showing how many movies a user has "liked" on various streaming platforms.
 
