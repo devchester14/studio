@@ -3,10 +3,5 @@
     "likedMovies": [],
     "searchQuery": "harry",
     "searchResults": []
-  },
-  "user2": {
-    "likedMovies": [],
-    "searchQuery": "",
-    "searchResults": []
   }
 }

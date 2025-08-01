@@ -17,18 +17,10 @@ interface UserData extends UserProfile {
 
 interface Database {
     user1: UserData;
-    user2: UserData;
 }
 
 let db: Database = {
     user1: {
-        likedMovies: [],
-        searchQuery: '',
-        searchResults: [],
-        age: undefined,
-        location: undefined,
-    },
-    user2: {
         likedMovies: [],
         searchQuery: '',
         searchResults: [],
