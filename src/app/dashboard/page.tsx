@@ -184,7 +184,7 @@ export default function DashboardPage() {
                     >
                         <CarouselContent>
                         {carousel.recommendations.map((content) => (
-                            <CarouselItem key={content.id} className="md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                            <CarouselItem key={content.id} className="md:basis-1/2 lg:basis-1/3 xl:basis-1/4 2xl:basis-1/8">
                             <div className="p-1 h-full">
                                 <ContentCard content={content} />
                             </div>
