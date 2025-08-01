@@ -18,7 +18,8 @@ export default function Home() {
   const { query, setQuery } = useUser();
   const [results, setResults] = useState<Content[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const debouncedQuery = useDebounce(query, 300);
+  // Changed debounce delay to 5000ms (5 seconds)
+  const debouncedQuery = useDebounce(query, 5000);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -58,7 +59,7 @@ export default function Home() {
   }, [debouncedQuery, performSearch]);
 
   return (
-    <>
+    </>
       <Header />
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         <div className="w-full text-center mb-8">
