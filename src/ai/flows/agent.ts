@@ -249,7 +249,7 @@ A user will provide a query. Your first step is to determine the user's intent. 
 - The user's query may be a direct title, a description of the plot, actors, a general theme, or a live event.
 
 After interpreting the query and using the tool, return a list of matching content based on the tool's output. For each result, provide all the fields in the output schema.
-For 'imageUrl', generate a url using https://placehold.co/400x600.png.
+For 'imageUrl', fetch the actual image url or xgenerate a url using https://placehold.co/400x600.png.
 For 'aiHint', provide a short, two-word hint for image generation related to the content title.
 
 Example Scenarios:

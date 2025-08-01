@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { Content } from "@/types";
+import type { Content, AvailabilityOption } from "@/types"; // Import AvailabilityOption
 import { PlayCircle } from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
@@ -41,36 +41,31 @@ const platformLogos: Record<string, string> = {
   "Purchase": 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.392.982a2.25 2.25 0 002.013 1.244H19.5m-16.5 0h16.5m-16.5 0v-8.894m0 8.894h-1.5a2.25 2.25 0 01-2.25-2.25v-1.5m2.25 3.75v-.886m0 0a2.25 2.25 0 011.243-2.013l1.943-.548a3.75 3.75 0 012.139.925l4.663 4.663a3.75 3.75 0 002.14.925l1.943-.548a2.25 2.25 0 011.243-2.013m0 0v-.375a2.25 2.25 0 00-1.124-1.908L20.5 9.5m-8.217-3.382a42.502 42.502 0 013.6-1.334L19.5 7.5m-9.217-3.382c.05-.02.105-.037.16-.054m-5.306 D4.5 5.625a42.45 42.45 0 01-.778 1.233h-.75" /></svg>',
 };
 
-// Helper function to get unique platforms from content availability string
-const getUniquePlatforms = (availability: string): string[] => {
-    // This split and trim might need adjustment based on the exact format
-    // of your availability strings from the AI.
-    const platforms = availability.split(',').map(p => p.trim()).filter(p => p);
-    
-    // Attempt to map various availability descriptions to known platform keys
-    return platforms.map(p => {
-        const lowerP = p.toLowerCase();
-        if (lowerP.includes('netflix')) return 'Netflix';
-        if (lowerP.includes('hulu')) return 'Hulu';
-        if (lowerP.includes('amazon prime') || lowerP.includes('prime video')) return 'Amazon Prime'; // Handle variations
-        if (lowerP.includes('hbo max')) return 'HBO Max';
-        if (lowerP.includes('paramount+')) return 'Paramount+';
-        if (lowerP.includes('peacock')) return 'Peacock';
-        if (lowerP.includes('espn+')) return 'ESPN+';
-        if (lowerP.includes('hotstar')) return 'Hotstar';
-        if (lowerP.includes('sling tv')) return 'Sling TV';
-        if (lowerP.includes('youtube tv')) return 'YouTube TV';
-        if (lowerP.includes('apple tv')) return 'Apple TV';
-        if (lowerP.includes('google play')) return 'Google Play';
-        if (lowerP.includes('vudu')) return 'Vudu';
-        if (lowerP.includes('crunchyroll')) return 'Crunchyroll';
-        if (lowerP.includes('fubotv')) return 'fuboTV';
-        if (lowerP.includes('disney+')) return 'Disney+';
-        if (lowerP.includes('rent')) return 'Rental'; // Map 'rent' keywords to generic Rental icon
-        if (lowerP.includes('purchase') || lowerP.includes('buy')) return 'Purchase'; // Map 'purchase'/'buy' keywords to generic Purchase icon
-        return p; // Return original if not mapped
-    }).filter(p => platformLogos[p]) // Filter out platforms without a corresponding logo
-    .reduce((unique: string[], item: string) => unique.includes(item) ? unique : [...unique, item], []); // Get unique values
+// Helper function to get unique platforms from content availability array
+const getUniquePlatforms = (availability: AvailabilityOption[] | string): string[] => {
+    // Check if availability is the old string format for backward compatibility if needed
+    if (typeof availability === 'string') {
+        // This part can be removed once the agent consistently returns the array format
+        console.warn("Using old string availability format in getUniquePlatforms.");
+        const platforms = availability.split(',').map(p => p.trim()).filter(p => p);
+        return platforms.map(p => {
+            const lowerP = p.toLowerCase();
+            if (lowerP.includes('netflix')) return 'Netflix';
+            // Add other platform mappings here if needed for the old format
+            return p;
+        }).filter(p => platformLogos[p])
+        .reduce((unique: string[], item: string) => unique.includes(item) ? unique : [...unique, item], []);
+    }
+
+    // Handle the new array format
+    if (Array.isArray(availability)) {
+        const platforms = availability.map(option => option.platform).filter(p => p);
+        // Get unique platform names and filter out those without a corresponding logo
+        return platforms.filter(p => platformLogos[p])
+                        .reduce((unique: string[], item: string) => unique.includes(item) ? unique : [...unique, item], []);
+    }
+
+    return []; // Return empty array if availability is neither string nor array
 };
 
 export function ContentCard({ content }: ContentCardProps) {
@@ -79,33 +74,70 @@ export function ContentCard({ content }: ContentCardProps) {
   // having to re-fetch data on the detail page.
   const [, setMovieForDetailPage] = useLocalStorage<Content | null>(`movie-${content.id}`, null);
 
+  // Modify renderActionButtons to use the new availability structure
   const renderActionButtons = () => {
-    const availabilityLower = content.availability.toLowerCase();
-    const actions = [];
-
-    if (availabilityLower.includes("subscription")) {
-      actions.push(
-        <Button key="watch" className="flex-1">
-          <PlayCircle />
-          Watch Now
-        </Button>
-      );
-    }
-    if (availabilityLower.includes("rent")) {
-      actions.push(
-        <Button key="rent" variant="secondary" className="flex-1">
-          Rent
-        </Button>
-      );
-    }
-    if (availabilityLower.includes("purchase") || availabilityLower.includes("buy")) {
-       actions.push(
-        <Button key="buy" variant="outline" className="flex-1">
-          Buy
-        </Button>
-      );
-    }
+    const actions: JSX.Element[] = [];
     
+    if (Array.isArray(content.availability)) {
+        // Filter for unique availability types (Subscription, Rental, Purchase)
+        const uniqueAvailabilityTypes = content.availability.reduce((types, option) => {
+            if (!types.includes(option.availability)) {
+                types.push(option.availability);
+            }
+            return types;
+        }, [] as string[]);
+
+        uniqueAvailabilityTypes.forEach(type => {
+            const lowerType = type.toLowerCase();
+            if (lowerType.includes("subscription")) {
+                actions.push(
+                    <Button key="watch" className="flex-1">
+                      <PlayCircle />
+                      Watch Now
+                    </Button>
+                  );
+            } else if (lowerType.includes("rental")) {
+                actions.push(
+                    <Button key="rent" variant="secondary" className="flex-1">
+                      Rent
+                    </Button>
+                  );
+            } else if (lowerType.includes("purchase") || lowerType.includes("buy")) {
+                 actions.push(
+                    <Button key="buy" variant="outline" className="flex-1">
+                      Buy
+                    </Button>
+                  );
+            }
+        });
+    } else {
+         // Fallback for old string format if necessary (can remove later)
+         const availabilityLower = String(content.availability).toLowerCase();
+         if (availabilityLower.includes("subscription")) {
+            actions.push(
+              <Button key="watch" className="flex-1">
+                <PlayCircle />
+                Watch Now
+              </Button>
+            );
+          }
+          if (availabilityLower.includes("rent")) {
+            actions.push(
+              <Button key="rent" variant="secondary" className="flex-1">
+                Rent
+              </Button>
+            );
+          }
+          if (availabilityLower.includes("purchase") || availabilityLower.includes("buy")) {
+             actions.push(
+              <Button key="buy" variant="outline" className="flex-1">
+                Buy
+              </Button>
+            );
+          }
+    }
+
+    // Add More Info button if no specific actions are generated
     if(actions.length === 0) {
         actions.push(
              <Button key="info" variant="ghost" className="flex-1">
@@ -121,6 +153,7 @@ export function ContentCard({ content }: ContentCardProps) {
     setMovieForDetailPage(content);
   };
 
+  // Ensure content.availability is treated as an array for displaying logos
   const platforms = getUniquePlatforms(content.availability);
   const displayedPlatforms = platforms.slice(0, 2);
   const remainingPlatformsCount = platforms.length - displayedPlatforms.length;
@@ -165,14 +198,7 @@ export function ContentCard({ content }: ContentCardProps) {
           <CardDescription className="line-clamp-3 text-sm mb-4">
               {content.plot}
           </CardDescription>
-          {/* Removed old platform/availability badges */}
-          {/*
-          <div className="flex flex-wrap gap-2 mt-auto">
-            <Badge variant="secondary">{content.platform}</Badge>
-            <Badge variant="outline">{content.availability}</Badge>
-            {content.genre && <Badge variant="default">{content.genre}</Badge>}
-          </div>
-          */}
+          
            <div className="flex flex-wrap gap-2 mt-auto">
              {content.genre && <Badge variant="default">{content.genre}</Badge>}
            </div>

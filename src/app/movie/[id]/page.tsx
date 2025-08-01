@@ -7,13 +7,78 @@ import Link from "next/link";
 import { Header } from "@/components/header";
 import type { Content, AvailabilityOption } from "@/types";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, ShoppingCart, Tv, Clapperboard, Users, Tag, ArrowLeft, Heart, BadgeDollarSign, Loader2, AlertCircle } from "lucide-react";
+import { Clapperboard, Users, Tag, ArrowLeft, Heart, Loader2, AlertCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { getContentAvailability } from "@/app/actions";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/hooks/use-user";
+
+// Mapping of platform names to logo file paths or generated icons
+const platformLogos: Record<string, string> = {
+  "Netflix": "/assets/netflix.png",
+  "Hulu": "/assets/hulu.png",
+  "Amazon Prime": "/assets/prime.png",
+  "HBO Max": "/assets/hbomax.png",
+  "Paramount+": "/assets/paramount+.png",
+  "Peacock": "/assets/peacock.png",
+  "ESPN+": "/assets/espn+.png",
+  "Hotstar": "/assets/hotstar.png",
+  "Sling TV": "/assets/sling.png",
+  "YouTube TV": "/assets/youtube.png",
+  "Apple TV": "/assets/appletv.png",
+  "Google Play": "/assets/googleplay.png",
+  "Vudu": "/assets/vudu.png",
+  "Crunchyroll": "/assets/crunchyroll.png",
+  "fuboTV": "/assets/fubotv.png",
+  "Disney+": "/assets/disneyplus.png",
+  // Generated icons for generic options
+  "Rental": 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>',
+  "Purchase": 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.392.982a2.25 2.25 0 002.013 1.244H19.5m-16.5 0h16.5m-16.5 0v-8.894m0 8.894h-1.5a2.25 2.25 0 01-2.25-2.25v-1.5m2.25 3.75v-.886m0 0a2.25 2.25 0 011.243-2.013l1.943-.548a3.75 3.75 0 012.139.925l4.663 4.663a3.75 3.75 0 002.14.925l1.943-.548a2.25 2.25 0 011.243-2.013m0 0v-.375a2.25 2.25 0 00-1.124-1.908L20.5 9.5m-8.217-3.382a42.502 42.502 0 013.6-1.334L19.5 7.5m-9.217-3.382c.05-.02.105-.037.16-.054m-5.306 D4.5 5.625a42.45 42.45 0 01-.778 1.233h-.75" /></svg>',
+};
+
+// Function to generate a basic deep link URL (may not work for all platforms/content)
+const generateDeepLink = (platform: string, title: string): string | undefined => {
+    const encodedTitle = encodeURIComponent(title);
+    switch (platform) {
+        case "Netflix":
+            return `https://www.netflix.com/search?q=${encodedTitle}`;
+        case "Hulu":
+            return `https://www.hulu.com/search?q=${encodedTitle}`;
+        case "Amazon Prime": // Using the 'prime.png' asset name
+            return `https://www.amazon.com/s?k=${encodedTitle}&i=instant-video`;
+        case "HBO Max": // Using the 'hbomax.png' asset name
+            return `https://play.max.com/search/q/${encodedTitle}`;
+        case "Paramount+": // Using the 'paramount+.png' asset name
+             return `https://www.paramountplus.com/search/?q=${encodedTitle}`;
+        case "Peacock": // Using the 'peacock.png' asset name
+             return `https://www.peacocktv.com/find/search?q=${encodedTitle}`;
+        case "ESPN+": // Using the 'espn+.png' asset name
+            return `https://plus.espn.com/search?q=${encodedTitle}`;
+        case "Hotstar": // Using the 'hotstar.png' asset name
+             return `https://www.hotstar.com/in/search?q=${encodedTitle}`;
+        case "Sling TV": // Using the 'sling.png' asset name
+            return `https://www.sling.com/programming/search?q=${encodedTitle}`;
+        case "YouTube TV": // Using the 'youtube.png' asset name
+            return `https://tv.youtube.com/search?q=${encodedTitle}`;
+        case "Apple TV": // Using the 'appletv.png' asset name
+             return `https://tv.apple.com/search?term=${encodedTitle}`;
+        case "Google Play": // Using the 'googleplay.png' asset name
+             return `https://play.google.com/store/search?q=${encodedTitle}&c=movies`;
+        case "Vudu": // Using the 'vudu.png' asset name
+             return `https://www.vudu.com/content/movies/search?searchString=${encodedTitle}`;
+        case "Crunchyroll": // Using the 'crunchyroll.png' asset name
+             return `https://www.crunchyroll.com/search?q=${encodedTitle}`;
+        case "fuboTV": // Using the 'fubotv.png' asset name
+             return `https://fubotv.com/search?q=${encodedTitle}`;
+        case "Disney+": // Using the 'disneyplus.png' asset name
+             return `https://www.disneyplus.com/search?q=${encodedTitle}`;
+        // Generic cases for rental/purchase might not have direct deep links to content
+        default:
+            return undefined;
+    }
+};
 
 // This component now fetches its own data if it doesn't have it.
 function MovieDetailContent({ storedMovie }: { storedMovie: Content | null }) {
@@ -98,19 +163,6 @@ function MovieDetailContent({ storedMovie }: { storedMovie: Content | null }) {
   
   const cheapestOption = getCheapestOption(availability);
 
-  const getIconForAvailability = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'subscription':
-        return <PlayCircle className="text-primary" />;
-      case 'rental':
-        return <ShoppingCart className="text-primary" />;
-      case 'purchase':
-        return <Tv className="text-primary" />;
-      default:
-        return <BadgeDollarSign className="text-primary" />;
-    }
-  };
-
   return (
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         <div className="mb-6">
@@ -174,22 +226,50 @@ function MovieDetailContent({ storedMovie }: { storedMovie: Content | null }) {
                         <span>{availabilityError}</span>
                     </div>
                 )}
-                {!isLoadingAvailability && !availabilityError && (
+                {!isLoadingAvailability && !availabilityError && availability.length > 0 && (
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {availability.map(option => (
-                            <div key={`${option.platform}-${option.availability}`} className="border rounded-lg p-4 flex flex-col items-start gap-4 bg-secondary/30 relative">
-                                {cheapestOption && cheapestOption.platform === option.platform && cheapestOption.price === option.price && (
-                                    <Badge className="absolute -top-3 right-2">Best Deal</Badge>
-                                )}
-                                <div className="flex items-center gap-3">
-                                    {getIconForAvailability(option.availability)}
-                                    <h4 className="text-xl font-semibold">{option.platform}</h4>
+                        {availability.map(option => {
+                            const deepLink = generateDeepLink(option.platform, movie.title);
+                            return (
+                                <div key={`${option.platform}-${option.availability}`} className="border rounded-lg p-4 flex flex-col items-start gap-4 bg-secondary/30 relative">
+                                    {cheapestOption && cheapestOption.platform === option.platform && cheapestOption.price === option.price && (
+                                        <Badge className="absolute -top-3 right-2">Best Deal</Badge>
+                                    )}
+                                    <div className="flex items-center gap-3">
+                                        {/* Display OTT logo or generic icon */}
+                                        {platformLogos[option.platform] ? (
+                                            <Image
+                                                src={platformLogos[option.platform]}
+                                                alt={`${option.platform} logo`}
+                                                width={32}
+                                                height={32}
+                                                className="rounded-full"
+                                            />
+                                        ) : ( // Fallback to generic icon if no specific logo is found
+                                            <Image
+                                                src={platformLogos[option.availability] || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-3h6" /></svg>'} // Generic plus icon as a final fallback
+                                                alt={`${option.availability} icon`}
+                                                width={32}
+                                                height={32}
+                                                className="rounded-full"
+                                            />
+                                        )}
+                                        <h4 className="text-xl font-semibold">{option.platform}</h4>
+                                    </div>
+                                    <p className="text-lg font-semibold">{option.availability}</p>
+                                    <p className="text-2xl font-bold">{option.price}</p>
+                                    {deepLink ? (
+                                        <Button asChild className="w-full mt-auto">
+                                            <a href={deepLink} target="_blank" rel="noopener noreferrer">Go to {option.platform}</a>
+                                        </Button>
+                                    ) : (
+                                         <Button className="w-full mt-auto" disabled>
+                                            Go to {option.platform}
+                                        </Button>
+                                    )}
                                 </div>
-                                <p className="text-lg font-semibold">{option.availability}</p>
-                                <p className="text-2xl font-bold">{option.price}</p>
-                                <Button className="w-full mt-auto">Go to {option.platform}</Button>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
                  {!isLoadingAvailability && !availabilityError && availability.length === 0 && (

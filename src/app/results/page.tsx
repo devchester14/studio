@@ -13,6 +13,15 @@ import { searchContent } from "../actions";
 import { useToast } from "@/hooks/use-toast";
 import { ContentCard } from "@/components/content-card";
 import { useUser } from "@/hooks/use-user";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
 
 function ResultsPageComponent() {
   const router = useRouter();
@@ -35,6 +44,7 @@ function ResultsPageComponent() {
 
     if (result.success && result.data) {
       setSearchResults(result.data as Content[]);
+      console.log("Search results from agent:", result.data); // Log the search results
     } else {
       toast({
         variant: "destructive",
@@ -69,6 +79,9 @@ function ResultsPageComponent() {
     handleSearchSubmit(transcript);
   };
   
+  const carouselResults = searchResults.slice(0, 4);
+  const scrollableResults = searchResults.slice(4, 6);
+
   if (isUserLoading) {
       return <div className="flex-1 flex justify-center items-center"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
   }
@@ -113,11 +126,43 @@ function ResultsPageComponent() {
                     Search Results for &quot;{query}&quot;
                     </h2>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                {searchResults.map((content) => (
-                    <ContentCard key={content.id} content={content} />
-                ))}
-                </div>
+                
+                {/* Carousel for first 4 results */}
+                {carouselResults.length > 0 && (
+                    <Carousel
+                        opts={{
+                        align: "start",
+                        loop: carouselResults.length > 1,
+                        }}
+                        className="w-full"
+                    >
+                        <CarouselContent>
+                        {carouselResults.map((content) => (
+                            <CarouselItem key={content.id} className="md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                            <div className="p-1">
+                                <ContentCard content={content} />
+                            </div>
+                            </CarouselItem>
+                        ))}
+                        </CarouselContent>
+                        <CarouselPrevious className="hidden md:flex -left-4" />
+                        <CarouselNext className="hidden md:flex -right-4"/>
+                    </Carousel>
+                )}
+
+                {/* Scrollable area for the next 2 results */}
+                {scrollableResults.length > 0 && (
+                    <div className="mt-8">
+                        <h3 className="text-2xl font-bold tracking-tight font-headline mb-4">More Results</h3>
+                        <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                                {scrollableResults.map((content) => (
+                                    <ContentCard key={content.id} content={content} />
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    </div>
+                )}
             </section>
         )}
 
