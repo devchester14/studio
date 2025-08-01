@@ -1,9 +1,6 @@
 
 import type { Content } from '@/types';
 
-// This is our in-memory "database" facade for the hackathon.
-// It interacts with API routes to persist data on the server.
-
 interface UserProfile {
   age?: number;
   location?: { latitude: number; longitude: number };
