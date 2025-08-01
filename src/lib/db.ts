@@ -1,11 +1,8 @@
 
 import type { Content } from '@/types';
-import * as fs from 'fs';
-import * as path from 'path';
 
-// This is our in-memory "database" for the hackathon.
-// In a real application, this would be a database like Firestore or a REST API.
-// It stores data for two distinct users, user1 and user2.
+// This is our in-memory "database" facade for the hackathon.
+// It interacts with API routes to persist data on the server.
 
 interface UserProfile {
   age?: number;
@@ -22,8 +19,6 @@ interface Database {
     user1: UserData;
     user2: UserData;
 }
-
-const DB_FILE = path.join(process.cwd(), 'data', 'db.json');
 
 let db: Database = {
     user1: {
@@ -42,24 +37,32 @@ let db: Database = {
     },
 };
 
-// Load database from file on initialization
-try {
-    const data = fs.readFileSync(DB_FILE, 'utf-8');
-    db = JSON.parse(data);
-} catch (error) {
-    console.error('Error loading database file, using default initial data:', error);
+// Function to load database from API route
+export async function loadDatabase() {
+    try {
+        const response = await fetch('/api/db');
+        if (response.ok) {
+            db = await response.json();
+        } else {
+            console.error('Error loading database from API:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error fetching database from API:', error);
+    }
 }
 
-// Save database to file
-function saveDatabase() {
+// Function to save database to API route
+async function saveDatabase() {
     try {
-        const dir = path.dirname(DB_FILE);
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
-        }
-        fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
+        await fetch('/api/db/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(db),
+        });
     } catch (error) {
-        console.error('Error saving database file:', error);
+        console.error('Error saving database to API:', error);
     }
 }
 

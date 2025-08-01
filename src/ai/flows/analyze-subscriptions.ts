@@ -9,7 +9,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const SubscriptionAnalysisInputSchema = z.object({
-  platformCounts: z.string().describe('A JSON string representing the count of liked movies per platform. e.g., '{"Netflix": 10, "Hulu": 2, "Amazon rime": 1}''),
+  platformCounts: z.string().describe('A JSON string representing the count of liked movies per platform. e.g.,"Netflix": 10, "Hulu": 2, "Amazon Prime": 1'),
 });
 export type SubscriptionAnalysisInput = z.infer<typeof SubscriptionAnalysisInputSchema>;
 

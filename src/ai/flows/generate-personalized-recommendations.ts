@@ -12,8 +12,8 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const PersonalizedRecommendationsInputSchema = z.object({
-  userPreferences: z.string().describe('The user\u0027s content preferences, genres, and favorite actors.'),
-  viewingHistory: z.string().describe('The user\u0027s viewing history, including titles, platforms, and ratings.'),
+  userPreferences: z.string().describe('The user\'s content preferences, genres, and favorite actors.'),
+  viewingHistory: z.string().describe('The user\'s viewing history, including titles, platforms, and ratings.'),
 });
 export type PersonalizedRecommendationsInput = z.infer<typeof PersonalizedRecommendationsInputSchema>;
 
@@ -37,6 +37,8 @@ const prompt = ai.definePrompt({
   input: {schema: PersonalizedRecommendationsInputSchema},
   output: {schema: PersonalizedRecommendationsOutputSchema},
   prompt: `You are an AI assistant designed to provide personalized content recommendations based on user preferences and viewing history.
+
+  **IMPORTANT: You must not recommend any adult or sexual content.**
 
   User Preferences: {{{userPreferences}}}
   Viewing History: {{{viewingHistory}}}
