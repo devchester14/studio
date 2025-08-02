@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import type { Content, AvailabilityOption } from "@/types"; // Import AvailabilityOption
 import { PlayCircle } from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { log } from "console";
 
 interface ContentCardProps {
   content: Content;
@@ -68,6 +69,7 @@ const getUniquePlatforms = (availability: AvailabilityOption[] | string): string
 };
 
 export function ContentCard({ content }: ContentCardProps) {
+  console.log(content);
   // We use a temporary local storage item to pass the full movie object
   // to the detail page. This is a hackathon-friendly way to avoid
   // having to re-fetch data on the detail page.
