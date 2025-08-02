@@ -4,13 +4,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/header";
-import { Search, Loader2 } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { VoiceSearch } from "@/components/voice-search";
 import { useDebounce } from "@/hooks/use-debounce";
 import { searchContent } from "./actions";
 import { ContentCard } from "@/components/content-card";
 import { CarouselSection } from "@/components/carousel-section";
+import { QuirkyLoader } from "@/components/quirky-loader";
 import type { Content } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/hooks/use-user";
@@ -27,6 +27,7 @@ export default function Home() {
     section3: "Regional"
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showLoader, setShowLoader] = useState(false);
   // Changed debounce delay to 5000ms (5 seconds)
   const debouncedQuery = useDebounce(query, 3000);
   const router = useRouter();
@@ -37,10 +38,6 @@ export default function Home() {
       router.push(`/results?q=${encodeURIComponent(searchQuery)}`);
     }
   };
-  
-  const handleVoiceSearch = (transcript: string) => {
-    setQuery(transcript);
-  }
 
   const performSearch = useCallback(async (searchQuery: string) => {
       if (searchQuery.trim().length < 3) {
@@ -49,6 +46,8 @@ export default function Home() {
       }
       
       setIsLoading(true);
+      setShowLoader(true);
+      
       const result = await searchContent({ query: searchQuery });
       setIsLoading(false);
 
@@ -154,19 +153,16 @@ export default function Home() {
                     }}
                 />
             </div>
-            <VoiceSearch onTranscriptChanged={handleVoiceSearch} />
         </div>
         
         {/* Carousel Sections */}
         <section className="mt-12">
-            {isLoading && (
-              <div className="flex justify-center items-center py-10">
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              </div>
+            {showLoader && (
+              <QuirkyLoader onComplete={() => setShowLoader(false)} />
             )}
             
             {/* Search Results - Show first when available */}
-            {!isLoading && results.length > 0 && (
+            {!showLoader && results.length > 0 && (
               <CarouselSection 
                 title="Search Results" 
                 content={results}
@@ -174,27 +170,29 @@ export default function Home() {
             )}
             
             {/* Always show other sections, but after search results if they exist */}
-            <>
-              {/* Section 1 - Popular/Most Watched */}
-              <CarouselSection 
-                title={dynamicTitles.section1} 
-                content={trendingContent}
-              />
-              
-              {/* Section 2 - Most Watched/Genre Content */}
-              <CarouselSection 
-                title={dynamicTitles.section2} 
-                content={genreContent}
-              />
-              
-              {/* Section 3 - Regional/Recommended Content */}
-              {recommendedContent.length > 0 && (
+            {!showLoader && (
+              <>
+                {/* Section 1 - Popular/Most Watched */}
                 <CarouselSection 
-                  title={dynamicTitles.section3} 
-                  content={recommendedContent}
+                  title={dynamicTitles.section1} 
+                  content={trendingContent}
                 />
-              )}
-            </>
+                
+                {/* Section 2 - Most Watched/Genre Content */}
+                <CarouselSection 
+                  title={dynamicTitles.section2} 
+                  content={genreContent}
+                />
+                
+                {/* Section 3 - Regional/Recommended Content */}
+                {recommendedContent.length > 0 && (
+                  <CarouselSection 
+                    title={dynamicTitles.section3} 
+                    content={recommendedContent}
+                  />
+                )}
+              </>
+            )}
             
             {/* Remove the additional sections when search results exist */}
         </section>

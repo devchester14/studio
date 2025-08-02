@@ -8,11 +8,11 @@ import type { Content } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Loader2 } from "lucide-react";
-import { VoiceSearch } from "@/components/voice-search";
 import { searchContent } from "../actions";
 import { useToast } from "@/hooks/use-toast";
 import { ContentCard } from "@/components/content-card";
 import { useUser } from "@/hooks/use-user";
+import { QuirkyLoader } from "@/components/quirky-loader";
 import {
   Carousel,
   CarouselContent,
@@ -32,6 +32,7 @@ function ResultsPageComponent() {
   const { toast } = useToast();
   
   const [isSearching, setIsSearching] = useState(false);
+  const [showLoader, setShowLoader] = useState(false);
 
   const performSearch = useCallback(async (searchQuery: string) => {
     if (searchQuery.trim().length < 3) {
@@ -40,6 +41,7 @@ function ResultsPageComponent() {
     }
     
     setIsSearching(true);
+    setShowLoader(true);
     const result = await searchContent({ query: searchQuery });
 
     if (result.success && result.data) {
@@ -74,10 +76,6 @@ function ResultsPageComponent() {
         router.push(`/results?q=${encodeURIComponent(newQuery)}`);
     }
   };
-
-  const handleVoiceSearch = (transcript: string) => {
-    handleSearchSubmit(transcript);
-  };
   
   const carouselResults = searchResults.slice(0, 4);
   const scrollableResults = searchResults.slice(4, 6);
@@ -107,19 +105,16 @@ function ResultsPageComponent() {
                     }}
                 />
             </div>
-            <VoiceSearch onTranscriptChanged={handleVoiceSearch} />
             <Button onClick={() => handleSearchSubmit(query)} size="lg" className="h-12" disabled={isSearching}>
                 {isSearching ? <Loader2 className="animate-spin" /> : 'Search'}
             </Button>
         </div>
 
-        {isSearching && (
-            <div className="flex justify-center items-center py-10">
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            </div>
+        {showLoader && (
+            <QuirkyLoader onComplete={() => setShowLoader(false)} />
         )}
 
-        {!isSearching && searchResults.length > 0 && (
+        {!showLoader && searchResults.length > 0 && (
             <section id="search-results" className="space-y-8">
                 <div className="text-center">
                     <h2 className="text-3xl font-bold tracking-tight font-headline">
@@ -166,7 +161,7 @@ function ResultsPageComponent() {
             </section>
         )}
 
-        {!isSearching && searchResults.length === 0 && query && (
+        {!showLoader && searchResults.length === 0 && query && (
              <div className="text-center py-10">
                 <p className="text-muted-foreground">
                 No results found for &quot;{query}&quot;. Try another search.

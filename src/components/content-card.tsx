@@ -281,8 +281,8 @@ export function ContentCard({ content }: ContentCardProps) {
                               key={platform}
                               src={platformLogos[platform]}
                               alt={`${platform} logo`}
-                              width={16}
-                              height={16}
+                              width={32}
+                              height={32}
                               className="rounded-full"
                           />
                       )

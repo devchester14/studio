@@ -13,7 +13,6 @@ import {
   SemanticSearchOutputSchema,
   type SemanticSearchOutput,
 } from '@/types/ai';
-import { log } from 'console';
 
 const searchWebTool = ai.defineTool(
   {
@@ -86,7 +85,7 @@ A user will provide a query. Your first step is to determine the user's intent. 
 - The user's query may be a direct title, a description of the plot, actors, a general theme, or a live event.
 
 After interpreting the query and using the tool, return a list of matching content based on the tool's output. For each result, provide all the fields in the output schema.
-For 'imageUrl', fetch the image actual movie 2:3 ratio for movie title.
+For search imbdb for 'imageUrl',search poster image of the fetched results by their title name in imdb and 2:3 ratio for movie title.
 For 'aiHint', provide a short, two-word hint for image generation related to the content title.
 
 Example Scenarios:
@@ -114,8 +113,7 @@ const agentFlow = ai.defineFlow(
 
     // Post-process to ensure a placeholder image is always present.
     return output.map(item => {
-      console.log(item);
-      console.log(`Image URL for "${item.title}": ${item.imageUrl}`);
+      
         if (!item.imageUrl || !item.imageUrl.startsWith('https://placehold.co')) {
             item.imageUrl = `https://placehold.co/400x600.png`;
         }
