@@ -47,9 +47,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         setIsLoading(true);
         const userData = db.getUserData(user);
-        setLikedMoviesState(userData.likedMovies);
-        setQueryState(userData.searchQuery);
-        setSearchResultsState(userData.searchResults);
+        
+        // Provide default values if userData is undefined
+        if (userData) {
+            setLikedMoviesState(userData.likedMovies);
+            setQueryState(userData.searchQuery);
+            setSearchResultsState(userData.searchResults);
+        } else {
+            // Default values if user doesn't exist in DB
+            setLikedMoviesState([]);
+            setQueryState('');
+            setSearchResultsState([]);
+        }
+        
         // Load age and location from DB
         setAgeState(db.getUserAge(user));
         setLocationState(db.getUserLocation(user));

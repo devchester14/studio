@@ -60,10 +60,29 @@ export type User = keyof typeof db;
 // --- API-like functions to interact with the database ---
 
 export function getUserData(userId: User): UserData {
+    if (!db[userId]) {
+        // Initialize user data if it doesn't exist
+        db[userId] = {
+            likedMovies: [],
+            searchQuery: '',
+            searchResults: [],
+            age: undefined,
+            location: undefined,
+        };
+    }
     return db[userId];
 }
 
 export function addLikedMovie(userId: User, movie: Content) {
+    if (!db[userId]) {
+        db[userId] = {
+            likedMovies: [],
+            searchQuery: '',
+            searchResults: [],
+            age: undefined,
+            location: undefined,
+        };
+    }
     const user = db[userId];
     if (!user.likedMovies.some(m => m.id === movie.id)) {
         user.likedMovies.push(movie);
@@ -72,47 +91,137 @@ export function addLikedMovie(userId: User, movie: Content) {
 }
 
 export function removeLikedMovie(userId: User, movieId: string) {
+    if (!db[userId]) {
+        db[userId] = {
+            likedMovies: [],
+            searchQuery: '',
+            searchResults: [],
+            age: undefined,
+            location: undefined,
+        };
+    }
     const user = db[userId];
     user.likedMovies = user.likedMovies.filter(m => m.id !== movieId);
     saveDatabase();
 }
 
 export function getLikedMovies(userId: User): Content[] {
+    if (!db[userId]) {
+        db[userId] = {
+            likedMovies: [],
+            searchQuery: '',
+            searchResults: [],
+            age: undefined,
+            location: undefined,
+        };
+    }
     return db[userId].likedMovies;
 }
 
 export function setSearchQuery(userId: User, query: string) {
+    if (!db[userId]) {
+        db[userId] = {
+            likedMovies: [],
+            searchQuery: '',
+            searchResults: [],
+            age: undefined,
+            location: undefined,
+        };
+    }
     db[userId].searchQuery = query;
     saveDatabase();
 }
 
 export function getSearchQuery(userId: User): string {
+    if (!db[userId]) {
+        db[userId] = {
+            likedMovies: [],
+            searchQuery: '',
+            searchResults: [],
+            age: undefined,
+            location: undefined,
+        };
+    }
     return db[userId].searchQuery;
 }
 
 export function setSearchResults(userId: User, results: Content[]) {
+    if (!db[userId]) {
+        db[userId] = {
+            likedMovies: [],
+            searchQuery: '',
+            searchResults: [],
+            age: undefined,
+            location: undefined,
+        };
+    }
     db[userId].searchResults = results;
     saveDatabase();
 }
 
 export function getSearchResults(userId: User): Content[] {
+    if (!db[userId]) {
+        db[userId] = {
+            likedMovies: [],
+            searchQuery: '',
+            searchResults: [],
+            age: undefined,
+            location: undefined,
+        };
+    }
     return db[userId].searchResults;
 }
 
 export function setUserAge(userId: User, age: number | undefined) {
+    if (!db[userId]) {
+        db[userId] = {
+            likedMovies: [],
+            searchQuery: '',
+            searchResults: [],
+            age: undefined,
+            location: undefined,
+        };
+    }
     db[userId].age = age;
     saveDatabase();
 }
 
 export function getUserAge(userId: User): number | undefined {
+    if (!db[userId]) {
+        db[userId] = {
+            likedMovies: [],
+            searchQuery: '',
+            searchResults: [],
+            age: undefined,
+            location: undefined,
+        };
+    }
     return db[userId].age;
 }
 
 export function setUserLocation(userId: User, location: { latitude: number; longitude: number } | undefined) {
+    if (!db[userId]) {
+        db[userId] = {
+            likedMovies: [],
+            searchQuery: '',
+            searchResults: [],
+            age: undefined,
+            location: undefined,
+        };
+    }
     db[userId].location = location;
     saveDatabase();
 }
 
 export function getUserLocation(userId: User): { latitude: number; longitude: number } | undefined {
+    if (!db[userId]) {
+        db[userId] = {
+            likedMovies: [],
+            searchQuery: '',
+            searchResults: [],
+            age: undefined,
+            location: undefined,
+        };
+    }
     return db[userId].location;
 }
