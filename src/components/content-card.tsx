@@ -34,7 +34,6 @@ const platformLogos: Record<string, string> = {
   "Google Play": "/assets/googleplay.png",
   "Vudu": "/assets/vudu.png",
   "Crunchyroll": "/assets/crunchyroll.png",
-  "fuboTV": "/assets/fubotv.png",
   "Disney+": "/assets/disneyplus.png",
   // Generated icons for generic options
   "Rental": 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>',
@@ -201,6 +200,7 @@ export function ContentCard({ content }: ContentCardProps) {
           
            <div className="flex flex-wrap gap-2 mt-auto">
              {content.genre && <Badge variant="default">{content.genre}</Badge>}
+              {/* Display OTT logos */}
            </div>
         </CardContent>
         <CardFooter className="p-4 pt-0">
