@@ -17,13 +17,13 @@ import { useUser } from "@/hooks/use-user";
 
 export default function Home() {
   const { query, setQuery } = useUser();
-  const [results, setResults] = useState<Content[]>([]);
-  const [trendingContent, setTrendingContent] = useState<Content[]>([]);
-  const [recommendedContent, setRecommendedContent] = useState<Content[]>([]);
-  const [genreContent, setGenreContent] = useState<Content[]>([]);
+  const [results, setResults] = useState<any[]>([]);
+  const [trendingContent, setTrendingContent] = useState<any[]>([]);
+  const [recommendedContent, setRecommendedContent] = useState<any[]>([]);
+  const [genreContent, setGenreContent] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   // Changed debounce delay to 5000ms (5 seconds)
-  const debouncedQuery = useDebounce(query, 5000);
+  const debouncedQuery = useDebounce(query, 3000);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -48,7 +48,7 @@ export default function Home() {
       setIsLoading(false);
 
       if (result.success && result.data) {
-        const content = result.data as Content[];
+        const content = result.data as any[];
         setResults(content);
         
         // Update carousel content based on search results
@@ -62,7 +62,7 @@ export default function Home() {
             // Use first genre for genre-specific content
             const genreResult = await searchContent({ query: genres[0] });
             if (genreResult.success && genreResult.data) {
-              setGenreContent(genreResult.data as Content[]);
+              setGenreContent(genreResult.data as any[]);
             }
           }
         }
@@ -80,7 +80,7 @@ export default function Home() {
     const loadTrendingContent = async () => {
       const result = await searchContent({ query: "trending movies 2024" });
       if (result.success && result.data) {
-        setTrendingContent(result.data as Content[]);
+        setTrendingContent(result.data as any[]);
       }
     };
     loadTrendingContent();
@@ -130,13 +130,7 @@ export default function Home() {
               </div>
             )}
             
-            {/* Trending Content */}
-            <CarouselSection 
-              title="Trending Now" 
-              content={trendingContent}
-            />
-            
-            {/* Search Results */}
+            {/* Search Results - Show first when available */}
             {!isLoading && results.length > 0 && (
               <CarouselSection 
                 title="Search Results" 
@@ -144,20 +138,52 @@ export default function Home() {
               />
             )}
             
-            {/* Recommended Content */}
-            {recommendedContent.length > 0 && (
-              <CarouselSection 
-                title="You Might Like" 
-                content={recommendedContent}
-              />
+            {/* Other sections - Show when no search results or as additional content */}
+            {(!isLoading && results.length === 0) && (
+              <>
+                {/* Trending Content */}
+                <CarouselSection 
+                  title="Trending Now" 
+                  content={trendingContent}
+                />
+                
+                {/* Recommended Content */}
+                {recommendedContent.length > 0 && (
+                  <CarouselSection 
+                    title="You Might Like" 
+                    content={recommendedContent}
+                  />
+                )}
+                
+                {/* Genre-specific Content */}
+                {genreContent.length > 0 && (
+                  <CarouselSection 
+                    title={`More ${genreContent[0]?.genre || 'Similar'} Content`}
+                    content={genreContent}
+                  />
+                )}
+              </>
             )}
             
-            {/* Genre-specific Content */}
-            {genreContent.length > 0 && (
-              <CarouselSection 
-                title={`More ${genreContent[0]?.genre || 'Similar'} Content`}
-                content={genreContent}
-              />
+            {/* Additional sections when search results exist */}
+            {!isLoading && results.length > 0 && (
+              <>
+                {/* Recommended Content */}
+                {recommendedContent.length > 0 && (
+                  <CarouselSection 
+                    title="You Might Like" 
+                    content={recommendedContent}
+                  />
+                )}
+                
+                {/* Genre-specific Content */}
+                {genreContent.length > 0 && (
+                  <CarouselSection 
+                    title={`More ${genreContent[0]?.genre || 'Similar'} Content`}
+                    content={genreContent}
+                  />
+                )}
+              </>
             )}
         </section>
       </main>

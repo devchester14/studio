@@ -31,7 +31,6 @@ const platformLogos: Record<string, string> = {
   "Google Play": "/assets/googleplay.png",
   "Vudu": "/assets/vudu.png",
   "Crunchyroll": "/assets/crunchyroll.png",
-  "fuboTV": "/assets/fubotv.png",
   "Disney+": "/assets/disneyplus.png",
   // Generated icons for generic options
   "Rental": 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>',
@@ -228,8 +227,21 @@ function MovieDetailContent({ storedMovie }: { storedMovie: Content | null }) {
                 )}
                 {!isLoadingAvailability && !availabilityError && availability.length > 0 && (
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {availability.map(option => {
+                        {availability
+                            .filter((option, index, self) => 
+                                // Remove duplicates based on platform and availability combination
+                                index === self.findIndex(o => 
+                                    o.platform === option.platform && 
+                                    o.availability === option.availability
+                                )
+                            )
+                            .map(option => {
                             const deepLink = generateDeepLink(option.platform, movie.title);
+                            const isNetflix = option.platform.toLowerCase() === 'netflix';
+                            const isSubscription = option.availability.toLowerCase().includes('subscription');
+                            const isRental = option.availability.toLowerCase().includes('rental');
+                            const isPurchase = option.availability.toLowerCase().includes('purchase');
+                            
                             return (
                                 <div key={`${option.platform}-${option.availability}`} className="border rounded-lg p-4 flex flex-col items-start gap-4 bg-secondary/30 relative">
                                     {cheapestOption && cheapestOption.platform === option.platform && cheapestOption.price === option.price && (
@@ -256,15 +268,31 @@ function MovieDetailContent({ storedMovie }: { storedMovie: Content | null }) {
                                         )}
                                         <h4 className="text-xl font-semibold">{option.platform}</h4>
                                     </div>
-                                    <p className="text-lg font-semibold">{option.availability}</p>
-                                    <p className="text-2xl font-bold">{option.price}</p>
+                                    
+                                    {/* Show appropriate pricing/availability info */}
+                                    <div className="space-y-2">
+                                        {isNetflix && isSubscription ? (
+                                            <p className="text-lg font-semibold text-green-500">Included with Subscription</p>
+                                        ) : isSubscription ? (
+                                            <p className="text-lg font-semibold text-blue-500">Subscription Required</p>
+                                        ) : isRental ? (
+                                            <p className="text-lg font-semibold text-orange-500">Rental: {option.price}</p>
+                                        ) : isPurchase ? (
+                                            <p className="text-lg font-semibold text-purple-500">Purchase: {option.price}</p>
+                                        ) : (
+                                            <p className="text-lg font-semibold">{option.availability}</p>
+                                        )}
+                                    </div>
+                                    
                                     {deepLink ? (
                                         <Button asChild className="w-full mt-auto">
-                                            <a href={deepLink} target="_blank" rel="noopener noreferrer">Go to {option.platform}</a>
+                                            <a href={deepLink} target="_blank" rel="noopener noreferrer">
+                                                {isNetflix ? 'Play Now' : `Go to ${option.platform}`}
+                                            </a>
                                         </Button>
                                     ) : (
                                          <Button className="w-full mt-auto" disabled>
-                                            Go to {option.platform}
+                                            {isNetflix ? 'Play Now' : `Go to ${option.platform}`}
                                         </Button>
                                     )}
                                 </div>
