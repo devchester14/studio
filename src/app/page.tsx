@@ -22,9 +22,9 @@ export default function Home() {
   const [recommendedContent, setRecommendedContent] = useState<any[]>([]);
   const [genreContent, setGenreContent] = useState<any[]>([]);
   const [dynamicTitles, setDynamicTitles] = useState({
-    trending: "Trending Now",
-    regional: "Regional Watch", 
-    recommended: "You Might Like"
+    section1: "Popular",
+    section2: "Most Watched", 
+    section3: "Regional"
   });
   const [isLoading, setIsLoading] = useState(false);
   // Changed debounce delay to 5000ms (5 seconds)
@@ -74,16 +74,16 @@ export default function Home() {
               const firstGenre = genres[0]?.toLowerCase();
               
               setDynamicTitles({
-                trending: searchLower.includes('movie') ? "Popular Movies" : 
+                section1: searchLower.includes('movie') ? "Popular Movies" : 
                          searchLower.includes('series') || searchLower.includes('show') ? "Popular Series" :
-                         searchLower.includes('anime') ? "Popular Anime" : "Trending Now",
-                regional: firstGenre ? `More ${firstGenre} Content` : "Regional Watch",
-                recommended: searchLower.includes('action') ? "More Action" :
-                           searchLower.includes('comedy') ? "More Comedy" :
-                           searchLower.includes('drama') ? "More Drama" :
-                           searchLower.includes('sci-fi') ? "More Sci-Fi" :
-                           searchLower.includes('horror') ? "More Horror" :
-                           searchLower.includes('romance') ? "More Romance" : "You Might Like"
+                         searchLower.includes('anime') ? "Popular Anime" : "Popular",
+                section2: firstGenre ? `More ${firstGenre} Content` : "Most Watched",
+                section3: searchLower.includes('action') ? "More Action" :
+                         searchLower.includes('comedy') ? "More Comedy" :
+                         searchLower.includes('drama') ? "More Drama" :
+                         searchLower.includes('sci-fi') ? "More Sci-Fi" :
+                         searchLower.includes('horror') ? "More Horror" :
+                         searchLower.includes('romance') ? "More Romance" : "Regional"
               });
             }
           }
@@ -97,19 +97,25 @@ export default function Home() {
       }
   }, [toast]);
 
-  // Load trending content on mount
+  // Load initial content on mount
   useEffect(() => {
     const loadInitialContent = async () => {
-      // Load trending content
-      const trendingResult = await searchContent({ query: "trending movies 2024" });
-      if (trendingResult.success && trendingResult.data) {
-        setTrendingContent(trendingResult.data as any[]);
+      // Load popular content
+      const popularResult = await searchContent({ query: "popular movies 2024" });
+      if (popularResult.success && popularResult.data) {
+        setTrendingContent(popularResult.data as any[]);
+      }
+      
+      // Load most watched content
+      const mostWatchedResult = await searchContent({ query: "most watched movies" });
+      if (mostWatchedResult.success && mostWatchedResult.data) {
+        setGenreContent(mostWatchedResult.data as any[]);
       }
       
       // Load regional content
       const regionalResult = await searchContent({ query: "regional movies bollywood" });
       if (regionalResult.success && regionalResult.data) {
-        setGenreContent(regionalResult.data as any[]);
+        setRecommendedContent(regionalResult.data as any[]);
       }
     };
     loadInitialContent();
@@ -169,22 +175,22 @@ export default function Home() {
             
             {/* Always show other sections, but after search results if they exist */}
             <>
-              {/* Trending Content */}
+              {/* Section 1 - Popular/Most Watched */}
               <CarouselSection 
-                title={dynamicTitles.trending} 
+                title={dynamicTitles.section1} 
                 content={trendingContent}
               />
               
-              {/* Regional Content */}
+              {/* Section 2 - Most Watched/Genre Content */}
               <CarouselSection 
-                title={dynamicTitles.regional} 
+                title={dynamicTitles.section2} 
                 content={genreContent}
               />
               
-              {/* Recommended Content - Only show when there are search results */}
+              {/* Section 3 - Regional/Recommended Content */}
               {recommendedContent.length > 0 && (
                 <CarouselSection 
-                  title={dynamicTitles.recommended} 
+                  title={dynamicTitles.section3} 
                   content={recommendedContent}
                 />
               )}
