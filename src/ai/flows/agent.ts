@@ -13,6 +13,9 @@ import {
   SemanticSearchOutputSchema,
   type SemanticSearchOutput,
 } from '@/types/ai';
+import { fetchPoster } from './fetchPoster';
+
+const OMDB_API_KEY = '6d357f6d34da25e72a03de380c8ba011'; // <-- Replace with your real OMDb API key
 
 const searchWebTool = ai.defineTool(
   {
@@ -111,13 +114,13 @@ const agentFlow = ai.defineFlow(
       return [];
     }
 
-    // Post-process to ensure a placeholder image is always present.
-    return output.map(item => {
-      
-        if (!item.imageUrl || !item.imageUrl.startsWith('https://placehold.co')) {
-            item.imageUrl = `https://placehold.co/400x600.png`;
+    return await Promise.all(
+      output.map(async item => {
+        if (!item.imageUrl || item.imageUrl.startsWith('https://placehold.co')) {
+          item.imageUrl = await fetchPoster(item.title, OMDB_API_KEY);
         }
         return item;
-    });
+      })
+    );
   }
 );
