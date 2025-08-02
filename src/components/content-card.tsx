@@ -173,24 +173,6 @@ export function ContentCard({ content }: ContentCardProps) {
             <CardTitle className="absolute bottom-4 left-4 text-2xl font-bold text-white font-headline">
               {content.title}
             </CardTitle>
-            {/* Display OTT logos */}
-            <div className="absolute top-2 right-2 flex gap-1">
-                {displayedPlatforms.map((platform) => (
-                    platformLogos[platform] && (
-                        <Image
-                            key={platform}
-                            src={platformLogos[platform]}
-                            alt={`${platform} logo`}
-                            width={24}
-                            height={24}
-                            className="rounded-full"
-                        />
-                    )
-                ))}
-                {remainingPlatformsCount > 0 && (
-                    <Badge className="rounded-full">+{remainingPlatformsCount}</Badge>
-                )}
-            </div>
           </div>
         </CardHeader>
         <CardContent className="p-4 flex-1 flex flex-col">
@@ -201,6 +183,23 @@ export function ContentCard({ content }: ContentCardProps) {
            <div className="flex flex-wrap gap-2 mt-auto">
              {content.genre && <Badge variant="default">{content.genre}</Badge>}
               {/* Display OTT logos */}
+              <div className="flex gap-1">
+                  {displayedPlatforms.map((platform) => (
+                      platformLogos[platform] && (
+                          <Image
+                              key={platform}
+                              src={platformLogos[platform]}
+                              alt={`${platform} logo`}
+                              width={16}
+                              height={16}
+                              className="rounded-full"
+                          />
+                      )
+                  ))}
+                  {remainingPlatformsCount > 0 && (
+                      <Badge className="rounded-full">+{remainingPlatformsCount}</Badge>
+                  )}
+              </div>
            </div>
         </CardContent>
         <CardFooter className="p-4 pt-0">
