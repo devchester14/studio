@@ -120,12 +120,7 @@ export function Header() {
         </h1>
       </Link>
       <nav className="flex items-center gap-2">
-        <Button asChild variant="ghost">
-          <Link href="/dashboard">
-            <LayoutGrid />
-            Dashboard
-          </Link>
-        </Button>
+        {/* Removed Dashboard Link */}
         {/* Removed Admin Link */}
         {/*
          <Button asChild variant="ghost">

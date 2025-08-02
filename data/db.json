@@ -1,7 +1,77 @@
 {
   "user1": {
     "likedMovies": [],
-    "searchQuery": "harry",
-    "searchResults": []
+    "searchQuery": "Naruto",
+    "searchResults": [
+      {
+        "id": "naruto-1",
+        "title": "Naruto",
+        "plot": "Naruto Uzumaki, a mischievous adolescent ninja, struggles as he searches for recognition and dreams of becoming the Hokage, the village's leader and strongest ninja.",
+        "actors": "Junko Takeuchi, Maile Flanagan, Kate Higgins",
+        "genre": "Animation, Action, Adventure, Comedy, Fantasy",
+        "imageUrl": "https://placehold.co/400x600.png",
+        "aiHint": "anime ninja",
+        "availability": [
+          {
+            "platform": "Crunchyroll",
+            "availability": "Subscription",
+            "price": "Subscription",
+            "link": "https://www.crunchyroll.com/series/GY9PQ4WZR/naruto"
+          },
+          {
+            "platform": "Hulu",
+            "availability": "Subscription",
+            "price": "Subscription",
+            "link": "https://www.hulu.com/series/naruto-shippuden-4e45e1ca-ead0-4dca-9198-72f2999a5091"
+          }
+        ]
+      },
+      {
+        "id": "naruto-2",
+        "title": "Naruto Shippuden",
+        "plot": "Naruto returns from training with Jiraiya and is ready to rejoin his friends and fight for what is important to him. But so much has happened while he was away... Will he be able to protect them?",
+        "actors": "Junko Takeuchi, Chie Nakamura, Noriaki Sugiyama",
+        "genre": "Animation, Action, Adventure, Fantasy",
+        "imageUrl": "https://placehold.co/400x600.png",
+        "aiHint": "anime fight",
+        "availability": [
+          {
+            "platform": "Crunchyroll",
+            "availability": "Subscription",
+            "price": "Subscription",
+            "link": "https://www.crunchyroll.com/series/GYXG251VM/naruto-shippuden"
+          },
+          {
+            "platform": "Hulu",
+            "availability": "Subscription",
+            "price": "Subscription",
+            "link": "https://www.hulu.com/series/naruto-shippuden-4e45e1ca-ead0-4dca-9198-72f2999a5091"
+          }
+        ]
+      },
+      {
+        "id": "naruto-3",
+        "title": "Boruto: Naruto Next Generations",
+        "plot": "With peace finally achieved in the ninja world, the next generation of shinobi are ready to make their mark. Boruto Uzumaki, son of Seventh Hokage Naruto Uzumaki, is determined to forge his own path.",
+        "actors": "Yuko Sanpei, Kokoro Kikuchi, Ryuichi Kijima",
+        "genre": "Animation, Action, Adventure, Fantasy",
+        "imageUrl": "https://placehold.co/400x600.png",
+        "aiHint": "anime family",
+        "availability": [
+          {
+            "platform": "Crunchyroll",
+            "availability": "Subscription",
+            "price": "Subscription",
+            "link": "https://www.crunchyroll.com/series/GYXG25MGR/boruto-naruto-next-generations"
+          },
+          {
+            "platform": "Hulu",
+            "availability": "Subscription",
+            "price": "Subscription",
+            "link": "https://www.hulu.com/series/boruto-naruto-next-generations-80b03434-737a-47f1-bbd3-296e6338c9ff"
+          }
+        ]
+      }
+    ]
   }
 }

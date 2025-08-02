@@ -90,20 +90,55 @@ export function ContentCard({ content }: ContentCardProps) {
             const lowerType = type.toLowerCase();
             if (lowerType.includes("subscription")) {
                 actions.push(
-                    <Button key="watch" className="flex-1">
+                    <Button key="watch" className="flex-1" onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Deep link to first available platform
+                        if (Array.isArray(content.availability)) {
+                            const firstPlatform = content.availability.find(opt => 
+                                opt.availability.toLowerCase().includes("subscription")
+                            );
+                            if (firstPlatform) {
+                                window.open(getDeepLink(firstPlatform.platform, content.title), '_blank');
+                            }
+                        }
+                    }}>
                       <PlayCircle />
                       Watch Now
                     </Button>
                   );
             } else if (lowerType.includes("rental")) {
                 actions.push(
-                    <Button key="rent" variant="secondary" className="flex-1">
+                    <Button key="rent" variant="secondary" className="flex-1" onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (Array.isArray(content.availability)) {
+                            const firstPlatform = content.availability.find(opt => 
+                                opt.availability.toLowerCase().includes("rental")
+                            );
+                            if (firstPlatform) {
+                                window.open(getDeepLink(firstPlatform.platform, content.title), '_blank');
+                            }
+                        }
+                    }}>
                       Rent
                     </Button>
                   );
             } else if (lowerType.includes("purchase") || lowerType.includes("buy")) {
                  actions.push(
-                    <Button key="buy" variant="outline" className="flex-1">
+                    <Button key="buy" variant="outline" className="flex-1" onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (Array.isArray(content.availability)) {
+                            const firstPlatform = content.availability.find(opt => 
+                                opt.availability.toLowerCase().includes("purchase") || 
+                                opt.availability.toLowerCase().includes("buy")
+                            );
+                            if (firstPlatform) {
+                                window.open(getDeepLink(firstPlatform.platform, content.title), '_blank');
+                            }
+                        }
+                    }}>
                       Buy
                     </Button>
                   );
@@ -114,7 +149,15 @@ export function ContentCard({ content }: ContentCardProps) {
          const availabilityLower = String(content.availability).toLowerCase();
          if (availabilityLower.includes("subscription")) {
             actions.push(
-              <Button key="watch" className="flex-1">
+              <Button key="watch" className="flex-1" onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  // Try to find a platform from the availability string
+                  const platforms = getUniquePlatforms(content.availability);
+                  if (platforms.length > 0) {
+                      window.open(getDeepLink(platforms[0], content.title), '_blank');
+                  }
+              }}>
                 <PlayCircle />
                 Watch Now
               </Button>
@@ -122,14 +165,28 @@ export function ContentCard({ content }: ContentCardProps) {
           }
           if (availabilityLower.includes("rent")) {
             actions.push(
-              <Button key="rent" variant="secondary" className="flex-1">
+              <Button key="rent" variant="secondary" className="flex-1" onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const platforms = getUniquePlatforms(content.availability);
+                  if (platforms.length > 0) {
+                      window.open(getDeepLink(platforms[0], content.title), '_blank');
+                  }
+              }}>
                 Rent
               </Button>
             );
           }
           if (availabilityLower.includes("purchase") || availabilityLower.includes("buy")) {
              actions.push(
-              <Button key="buy" variant="outline" className="flex-1">
+              <Button key="buy" variant="outline" className="flex-1" onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const platforms = getUniquePlatforms(content.availability);
+                  if (platforms.length > 0) {
+                      window.open(getDeepLink(platforms[0], content.title), '_blank');
+                  }
+              }}>
                 Buy
               </Button>
             );
@@ -146,6 +203,38 @@ export function ContentCard({ content }: ContentCardProps) {
     }
 
     return actions;
+  };
+
+  // Deep link function
+  const getDeepLink = (platform: string, title: string): string => {
+    const encodedTitle = encodeURIComponent(title);
+    const platformLower = platform.toLowerCase();
+    
+    switch (platformLower) {
+      case 'netflix':
+        return `https://www.netflix.com/search?q=${encodedTitle}`;
+      case 'hulu':
+        return `https://www.hulu.com/search?q=${encodedTitle}`;
+      case 'amazon prime':
+        return `https://www.amazon.com/s?k=${encodedTitle}&i=instant-video`;
+      case 'hbo max':
+        return `https://play.max.com/search?q=${encodedTitle}`;
+      case 'disney+':
+        return `https://www.disneyplus.com/search?q=${encodedTitle}`;
+      case 'paramount+':
+        return `https://www.paramountplus.com/search?q=${encodedTitle}`;
+      case 'peacock':
+        return `https://www.peacocktv.com/search?q=${encodedTitle}`;
+      case 'apple tv':
+        return `https://tv.apple.com/search?q=${encodedTitle}`;
+      case 'google play':
+        return `https://play.google.com/store/search?q=${encodedTitle}&c=movies`;
+      case 'vudu':
+        return `https://www.vudu.com/search?q=${encodedTitle}`;
+      default:
+        // Fallback to a general search
+        return `https://www.google.com/search?q=${encodedTitle}+streaming`;
+    }
   };
   
   const handleCardClick = () => {

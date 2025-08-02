@@ -10,6 +10,7 @@ import { VoiceSearch } from "@/components/voice-search";
 import { useDebounce } from "@/hooks/use-debounce";
 import { searchContent } from "./actions";
 import { ContentCard } from "@/components/content-card";
+import { CarouselSection } from "@/components/carousel-section";
 import type { Content } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/hooks/use-user";
@@ -17,6 +18,9 @@ import { useUser } from "@/hooks/use-user";
 export default function Home() {
   const { query, setQuery } = useUser();
   const [results, setResults] = useState<Content[]>([]);
+  const [trendingContent, setTrendingContent] = useState<Content[]>([]);
+  const [recommendedContent, setRecommendedContent] = useState<Content[]>([]);
+  const [genreContent, setGenreContent] = useState<Content[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   // Changed debounce delay to 5000ms (5 seconds)
   const debouncedQuery = useDebounce(query, 5000);
@@ -44,7 +48,24 @@ export default function Home() {
       setIsLoading(false);
 
       if (result.success && result.data) {
-        setResults(result.data as Content[]);
+        const content = result.data as Content[];
+        setResults(content);
+        
+        // Update carousel content based on search results
+        if (content.length > 0) {
+          // Use search results for recommendations
+          setRecommendedContent(content.slice(0, 10));
+          
+          // Extract genres from search results for genre-specific content
+          const genres = [...new Set(content.map(item => item.genre).filter(Boolean))];
+          if (genres.length > 0) {
+            // Use first genre for genre-specific content
+            const genreResult = await searchContent({ query: genres[0] });
+            if (genreResult.success && genreResult.data) {
+              setGenreContent(genreResult.data as Content[]);
+            }
+          }
+        }
       } else {
         toast({
           variant: "destructive",
@@ -53,6 +74,17 @@ export default function Home() {
         });
       }
   }, [toast]);
+
+  // Load trending content on mount
+  useEffect(() => {
+    const loadTrendingContent = async () => {
+      const result = await searchContent({ query: "trending movies 2024" });
+      if (result.success && result.data) {
+        setTrendingContent(result.data as Content[]);
+      }
+    };
+    loadTrendingContent();
+  }, []);
 
   useEffect(() => {
     performSearch(debouncedQuery);
@@ -90,28 +122,44 @@ export default function Home() {
             <VoiceSearch onTranscriptChanged={handleVoiceSearch} />
         </div>
         
+        {/* Carousel Sections */}
         <section className="mt-12">
             {isLoading && (
               <div className="flex justify-center items-center py-10">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
               </div>
             )}
+            
+            {/* Trending Content */}
+            <CarouselSection 
+              title="Trending Now" 
+              content={trendingContent}
+            />
+            
+            {/* Search Results */}
             {!isLoading && results.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                    {results.map((content) => (
-                        <ContentCard key={content.id} content={content} />
-                    ))}
-                </div>
+              <CarouselSection 
+                title="Search Results" 
+                content={results}
+              />
             )}
-             {!isLoading && results.length === 0 && debouncedQuery.length >= 3 && (
-                <div className="text-center py-10">
-                    <p className="text-muted-foreground">
-                    No results found for &quot;{debouncedQuery}&quot;.
-                    </p>
-                </div>
+            
+            {/* Recommended Content */}
+            {recommendedContent.length > 0 && (
+              <CarouselSection 
+                title="You Might Like" 
+                content={recommendedContent}
+              />
+            )}
+            
+            {/* Genre-specific Content */}
+            {genreContent.length > 0 && (
+              <CarouselSection 
+                title={`More ${genreContent[0]?.genre || 'Similar'} Content`}
+                content={genreContent}
+              />
             )}
         </section>
-
       </main>
     </>
   );
