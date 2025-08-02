@@ -21,6 +21,11 @@ export default function Home() {
   const [trendingContent, setTrendingContent] = useState<any[]>([]);
   const [recommendedContent, setRecommendedContent] = useState<any[]>([]);
   const [genreContent, setGenreContent] = useState<any[]>([]);
+  const [dynamicTitles, setDynamicTitles] = useState({
+    trending: "Trending Now",
+    regional: "Regional Watch", 
+    recommended: "You Might Like"
+  });
   const [isLoading, setIsLoading] = useState(false);
   // Changed debounce delay to 5000ms (5 seconds)
   const debouncedQuery = useDebounce(query, 3000);
@@ -56,13 +61,30 @@ export default function Home() {
           // Use search results for recommendations
           setRecommendedContent(content.slice(0, 10));
           
-          // Extract genres from search results for genre-specific content
+          // Update regional content based on search genre
           const genres = [...new Set(content.map(item => item.genre).filter(Boolean))];
           if (genres.length > 0) {
             // Use first genre for genre-specific content
             const genreResult = await searchContent({ query: genres[0] });
             if (genreResult.success && genreResult.data) {
               setGenreContent(genreResult.data as any[]);
+              
+              // Generate dynamic titles based on search
+              const searchLower = searchQuery.toLowerCase();
+              const firstGenre = genres[0]?.toLowerCase();
+              
+              setDynamicTitles({
+                trending: searchLower.includes('movie') ? "Popular Movies" : 
+                         searchLower.includes('series') || searchLower.includes('show') ? "Popular Series" :
+                         searchLower.includes('anime') ? "Popular Anime" : "Trending Now",
+                regional: firstGenre ? `More ${firstGenre} Content` : "Regional Watch",
+                recommended: searchLower.includes('action') ? "More Action" :
+                           searchLower.includes('comedy') ? "More Comedy" :
+                           searchLower.includes('drama') ? "More Drama" :
+                           searchLower.includes('sci-fi') ? "More Sci-Fi" :
+                           searchLower.includes('horror') ? "More Horror" :
+                           searchLower.includes('romance') ? "More Romance" : "You Might Like"
+              });
             }
           }
         }
@@ -77,13 +99,20 @@ export default function Home() {
 
   // Load trending content on mount
   useEffect(() => {
-    const loadTrendingContent = async () => {
-      const result = await searchContent({ query: "trending movies 2024" });
-      if (result.success && result.data) {
-        setTrendingContent(result.data as any[]);
+    const loadInitialContent = async () => {
+      // Load trending content
+      const trendingResult = await searchContent({ query: "trending movies 2024" });
+      if (trendingResult.success && trendingResult.data) {
+        setTrendingContent(trendingResult.data as any[]);
+      }
+      
+      // Load regional content
+      const regionalResult = await searchContent({ query: "regional movies bollywood" });
+      if (regionalResult.success && regionalResult.data) {
+        setGenreContent(regionalResult.data as any[]);
       }
     };
-    loadTrendingContent();
+    loadInitialContent();
   }, []);
 
   useEffect(() => {
@@ -138,53 +167,30 @@ export default function Home() {
               />
             )}
             
-            {/* Other sections - Show when no search results or as additional content */}
-            {(!isLoading && results.length === 0) && (
-              <>
-                {/* Trending Content */}
+            {/* Always show other sections, but after search results if they exist */}
+            <>
+              {/* Trending Content */}
+              <CarouselSection 
+                title={dynamicTitles.trending} 
+                content={trendingContent}
+              />
+              
+              {/* Regional Content */}
+              <CarouselSection 
+                title={dynamicTitles.regional} 
+                content={genreContent}
+              />
+              
+              {/* Recommended Content - Only show when there are search results */}
+              {recommendedContent.length > 0 && (
                 <CarouselSection 
-                  title="Trending Now" 
-                  content={trendingContent}
+                  title={dynamicTitles.recommended} 
+                  content={recommendedContent}
                 />
-                
-                {/* Recommended Content */}
-                {recommendedContent.length > 0 && (
-                  <CarouselSection 
-                    title="You Might Like" 
-                    content={recommendedContent}
-                  />
-                )}
-                
-                {/* Genre-specific Content */}
-                {genreContent.length > 0 && (
-                  <CarouselSection 
-                    title={`More ${genreContent[0]?.genre || 'Similar'} Content`}
-                    content={genreContent}
-                  />
-                )}
-              </>
-            )}
+              )}
+            </>
             
-            {/* Additional sections when search results exist */}
-            {!isLoading && results.length > 0 && (
-              <>
-                {/* Recommended Content */}
-                {recommendedContent.length > 0 && (
-                  <CarouselSection 
-                    title="You Might Like" 
-                    content={recommendedContent}
-                  />
-                )}
-                
-                {/* Genre-specific Content */}
-                {genreContent.length > 0 && (
-                  <CarouselSection 
-                    title={`More ${genreContent[0]?.genre || 'Similar'} Content`}
-                    content={genreContent}
-                  />
-                )}
-              </>
-            )}
+            {/* Remove the additional sections when search results exist */}
         </section>
       </main>
     </>
